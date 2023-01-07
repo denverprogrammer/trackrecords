@@ -1,0 +1,36 @@
+% block content %}
+<div class="container">
+<br>
+<h1>Choose a plan according to your needs</h1>
+<hr>
+<div class="row">
+{% for object in object_list %}
+<div class="col-sm-4 col-md-4">
+<div class="card" style="width: 18rem;">
+<!-- <img class="card-img-top " src="{{ object.image.url }}" alt="Card image cap"> -->
+<div class="card-body">
+<h5 class="card-title">{{ object.membership_type }}</h5>
+<p class="card-text">{{ object.desc | linebreaks }}</p>
+</div>
+<ul class="list-group list-group-flush">
+<li class="list-group-item"> ${{ object.price }}<small>/month</small></li>
+</ul>
+<div class="card-body">
+{% if object.membership_type != 'Free' %}
+<form method="POST" action="{% url 'web:select' %}">
+{% csrf_token %}
+{% if object.membership_type != current_membership %}
+<button class="btn btn-warning">Change</button>
+{% else %}
+<small>Your current plan</small>
+{% endif %}
+<input type="hidden" name="membership_type" value="{{ object.membership_type }}">
+</form>
+{% endif %}
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endblock content %}
