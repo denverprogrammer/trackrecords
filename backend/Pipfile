@@ -15,9 +15,15 @@ django-subadmin = "==3.2.1"
 uvicorn = "==0.19.0"
 gunicorn = "==20.1.0"
 psycopg2-binary = "==2.9.5"
+django-admin-interface = "==0.24.2"
+django-extra-settings = "==0.7.0"
 
 [dev-packages]
 autopep8 = "==2.0.0"
+pyvim = "==3.0.3"
 
 [requires]
 python_version = "3.12"
+
+[pipenv]
+allow_prereleases = false

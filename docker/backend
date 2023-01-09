@@ -17,7 +17,7 @@ WORKDIR /
 
 RUN apk update \
     && apk add --no-cache postgresql-libs \
-    && apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev \
+    && apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-dev libjpeg-turbo-dev \
     && pip install --upgrade pip \
     && pip install pipenv \
     && pipenv install --system --deploy
@@ -25,7 +25,7 @@ RUN apk update \
 FROM base as compiled
 
 RUN apk update \
-    && apk add libpq \
+    && apk add libpq libjpeg-turbo-dev \
     && mkdir -p /home/backend
 
 COPY --from=dependencies /usr/local /usr/local

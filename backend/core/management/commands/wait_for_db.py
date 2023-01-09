@@ -2,17 +2,18 @@
 Django command to wait for the database to be available.
 """
 
-import typing
 import time
+import typing
+
 import psycopg2
-from django.db import utils
 from django.core.management.base import BaseCommand
+from django.db import utils
 
 
 class Command(BaseCommand):
     """Django command to wait for database."""
 
-    def handle(self, *args : typing.Any, **options : typing.Any) -> None:
+    def handle(self, *args: typing.Any, **options: typing.Any) -> None:
         """Entrypoint for command"""
         self.stdout.write('Waiting for database...')
         db_up = False
