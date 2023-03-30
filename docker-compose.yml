@@ -6,6 +6,7 @@ services:
         image: postgis/postgis:15-3.3-alpine
         volumes:
             - postgres_data:/var/lib/postgresql/data/
+            - import_volume:/home/data
         environment:
             - POSTGRES_DB=${DATABASE_NAME}
             - POSTGRES_PORT=${DATABASE_PORT}
@@ -19,9 +20,11 @@ services:
             context: ./backend
             dockerfile: ../docker/backend
         volumes:
+            - ./docker/mktsymbols_v2.tsv:/data/mktsymbols_v2.tsv
             - ./backend:/home/backend
             - static_volume:/home/static
             - media_volume:/home/media
+            - import_volume:/home/data
         depends_on:
             - database
         networks:
@@ -65,6 +68,7 @@ volumes:
     postgres_data:
     static_volume:
     media_volume:
+    import_volume:
 
 networks:
     main:

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'admin_interface',
     'colorfield',
     'subadmin',
-    'extra_settings',
+    'more_admin_filters',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -7,3 +7,6 @@ https://www.howtogeek.com/444596/how-to-change-the-default-shell-to-bash-in-maco
 https://medium.com/geekculture/setting-up-python-environment-in-macos-using-pyenv-and-pipenv-116293da8e72
 https://pipenv-fork.readthedocs.io/en/latest/basics.html
 https://gist.github.com/rahularity/86da20fe3858e6b311de068201d279e3
+https://gist.github.com/rahularity/86da20fe3858e6b311de068201d279e3
+https://dev.to/danilovmy/how-to-solve-the-singleton-problem-in-django-modeladmin-g42
+

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from more_admin_filters import RelatedDropdownFilter
 
 from .models import Exchange, Market, Security, Symbol
 
@@ -36,7 +37,13 @@ class ExchangeAdmin(NamedAdmin):
 class SymbolAdmin(NamedAdmin, admin.ModelAdmin):
     autocomplete_fields = ['exchange', 'market', 'security']
     list_display = ('short_name', 'long_name',
-                    'exchange_link', 'market_link', 'security_link')
+                    'exchange_link', 'market_link', 'security_link', 'sic', 'frontmonth', 'naics')
+
+    list_filter = (
+        ('exchange', RelatedDropdownFilter),
+        ('market', RelatedDropdownFilter),
+        ('security', RelatedDropdownFilter),
+    )
 
     @admin.display(ordering='exchange__short_name', description='exchange')
     def exchange_link(self, obj):
