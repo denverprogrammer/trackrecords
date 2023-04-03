@@ -7,7 +7,6 @@ ENCOM
 ENID	
 FXCM	
 KBCB	
-MGCB	
 MGKB	
 TENFORE	
 TENFORE_LITE	
@@ -60,3 +59,4 @@ CME-FL	CME Indexes
 NFX	NASDAQ Futures Exchange
 FTSE	Financial Times Stock Exchange
 LPPM	London Platinum and Palladium Market
+MGCB	CME Globex: MGEX/CBOT Inter-Exchange Spreads

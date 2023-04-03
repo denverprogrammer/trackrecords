@@ -58,7 +58,7 @@ class TempSymbolManager(models.Manager, ImportExportStub):
     download_url = 'https://www.iqfeed.net/downloads/download_file.cfm?type=mktsymbols'
     extract_folder = '/home/data/symbols'
     extract_file = '/mktsymbols_v2.txt'
-    file_name = extract_folder . extract_file
+    file_name = '/home/data/symbols/mktsymbols_v2.txt'
 
     def clear_temp(self) -> str:
         return 'DELETE FROM dataset_tempsymbol;'
@@ -213,7 +213,7 @@ class Security(CodeStub):
 
     objects: SecurityManager = SecurityManager()
 
-    class Meta(AbstractName.Meta):
+    class Meta(CodeStub.Meta):
         verbose_name_plural = 'securities'
 
 
@@ -232,7 +232,7 @@ class Symbol(CodeStub):
     naics = models.ForeignKey(
         NaicsCode, on_delete=models.CASCADE, null=True, blank=True)
 
-    class Meta(AbstractName.Meta):
+    class Meta(CodeStub.Meta):
         ordering = ['exchange__code', 'code']
 
     def __str__(self):
@@ -258,7 +258,7 @@ class TempSymbol(models.Model):
 
     objects: TempSymbolManager = TempSymbolManager()
 
-    class Meta(AbstractName.Meta):
+    class Meta(CodeStub.Meta):
         ordering = ['symbol']
 
     def __str__(self):

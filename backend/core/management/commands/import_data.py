@@ -26,6 +26,7 @@ class Command(BaseCommand):
 
         TempSymbol.objects.download_data_file()
         self.stdout.write('Download complete...')
+
         cursor.execute(TempSymbol.objects.clear_temp())
         cursor.execute(TempSymbol.objects.import_data())
         self.stdout.write('Import of temp symbols complete...')
