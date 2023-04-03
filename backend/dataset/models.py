@@ -44,6 +44,17 @@ class ImportExportStub(object):
 
 class TempSymbolManager(models.Manager, ImportExportStub):
 
+    columns = '''
+        symbol,
+        description,
+        exchange,
+        listed_market,
+        security_type,
+        sic,
+        frontmonth,
+        naics
+    '''
+    tbl_name = 'dataset_tempsymbol'
     download_url = 'https://www.iqfeed.net/downloads/download_file.cfm?type=mktsymbols'
     extract_folder = '/home/data/symbols'
     extract_file = '/mktsymbols_v2.txt'
@@ -51,23 +62,6 @@ class TempSymbolManager(models.Manager, ImportExportStub):
 
     def clear_temp(self) -> str:
         return 'DELETE FROM dataset_tempsymbol;'
-
-    def import_data(self) -> str:
-        return '''
-            COPY dataset_tempsymbol(
-                symbol,
-                description,
-                exchange,
-                listed_market,
-                security_type,
-                sic,
-                frontmonth,
-                naics
-            )
-            FROM '/home/data/symbols/mktsymbols_v2.txt'
-            DELIMITER E'\t'
-            CSV HEADER;
-        '''
 
     def insert_naics(self) -> str:
         return '''
