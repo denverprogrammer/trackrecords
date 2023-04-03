@@ -6,9 +6,9 @@ from django.db import models
 
 
 class Portfolio(models.Model):
-    short_name = models.CharField(max_length=32, db_index=True)
+    code = models.CharField(max_length=32, db_index=True)
 
-    long_name = models.CharField(max_length=64)
+    description = models.CharField(max_length=64)
 
     initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -33,7 +33,7 @@ class Portfolio(models.Model):
     total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
     def __str__(self):
-        return self.short_name
+        return self.code
 
 
 class Position(models.Model):
@@ -81,7 +81,7 @@ class Position(models.Model):
     exit_amount = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return self.portfolio.short_name
+        return self.portfolio.code
 
 
 class Order(models.Model):
@@ -137,4 +137,4 @@ class Order(models.Model):
     filled_amount = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.symbol.short_name
+        return self.symbol.code

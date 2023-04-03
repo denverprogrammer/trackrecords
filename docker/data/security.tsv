@@ -1,0 +1,22 @@
+code	description
+BONDS	Bonds
+COMBINED_FUTURE	Combined Future
+DAILY_FUTURE	Daily Future
+EQUITY	Equity
+FOPTION	Future Option
+FOREX	Foreign Monetary Exchange
+FORWARD	Foreward
+FUTURE	Future
+COMBINED_FOPTION	Combined Future Option
+GENERICRPT	Generic Report
+SPREAD	Future Spread
+INDEX	Index
+STRATSPREAD	Strategy Spread
+MKTSTATS	Market Statistics
+SPOT	Spot
+MUTUAL	Mutual Fund
+MONEY	Money Market Fund
+PRECMTL	Precious Metals
+IEOPTION	Index/Equity Option
+ICSPREAD	Inter-Commodity Future Spread
+STRIP	Calculated Future Strip

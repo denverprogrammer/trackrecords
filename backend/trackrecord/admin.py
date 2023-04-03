@@ -74,7 +74,7 @@ class PositionSubAdmin(SubAdmin):
 class PortfolioAdmin(RootSubAdmin):
     subadmins = [PositionSubAdmin, OrderSubAdmin]
 
-    search_fields = ['short_name', 'long_name']
+    search_fields = ['code', 'description']
 
     readonly_fields = [
         'avg_profit',
@@ -84,8 +84,8 @@ class PortfolioAdmin(RootSubAdmin):
     ]
 
     list_display = (
-        'short_name',
-        'long_name',
+        'code',
+        'description',
         'initial_capital',
         'record_type',
         'entry_type',
@@ -97,7 +97,7 @@ class PortfolioAdmin(RootSubAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('short_name', 'long_name', 'initial_capital', 'record_type', 'entry_type')
+            'fields': ('code', 'description', 'initial_capital', 'record_type', 'entry_type')
         }),
         ('Calculations', {
             'fields': ('avg_profit', 'avg_duration', 'win_ratio', 'total_cagr')

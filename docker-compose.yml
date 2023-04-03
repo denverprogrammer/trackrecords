@@ -6,6 +6,10 @@ services:
         image: postgis/postgis:15-3.3-alpine
         volumes:
             - postgres_data:/var/lib/postgresql/data/
+            - ./docker/data/naics.tsv:/home/data/naics.tsv
+            - ./docker/data/sic.tsv:/home/data/sic.tsv
+            - ./docker/data/exchange.tsv:/home/data/exchange.tsv
+            - ./docker/data/security.tsv:/home/data/security.tsv
             - import_volume:/home/data
         environment:
             - POSTGRES_DB=${DATABASE_NAME}
@@ -20,7 +24,6 @@ services:
             context: ./backend
             dockerfile: ../docker/backend
         volumes:
-            - ./docker/mktsymbols_v2.tsv:/data/mktsymbols_v2.tsv
             - ./backend:/home/backend
             - static_volume:/home/static
             - media_volume:/home/media
