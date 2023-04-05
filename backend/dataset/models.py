@@ -1,6 +1,7 @@
 # Create your models here.
 
 import os
+import typing
 from io import BytesIO
 from urllib.request import urlopen
 from zipfile import ZipFile
@@ -42,7 +43,29 @@ class ImportExportStub(object):
         '''
 
 
-class TempSymbolManager(models.Manager, ImportExportStub):
+class TempSymbolQuerySet(models.QuerySet['TempSymbol']):
+    def distinct_naics(self):
+        return self.filter(naics__isnull=False)\
+            .values('naics').distinct().order_by('naics')
+
+    def distinct_sic(self):
+        return self.filter(sic__isnull=False)\
+            .values('sic').distinct().order_by('sic')
+
+    def distinct_exchanges(self):
+        return self.filter(exchange__isnull=False)\
+            .values('exchange').distinct().order_by('exchange')
+
+    def distinct_markets(self):
+        return self.filter(listed_market__isnull=False)\
+            .values('listed_market').distinct().order_by('listed_market')
+
+    def distinct_securities(self):
+        return self.filter(security_type__isnull=False)\
+            .values('security_type').distinct().order_by('security_type')
+
+
+class TempSymbolManager(models.Manager['TempSymbol'], ImportExportStub):
 
     columns = '''
         symbol,
@@ -60,50 +83,34 @@ class TempSymbolManager(models.Manager, ImportExportStub):
     extract_file = '/mktsymbols_v2.txt'
     file_name = '/home/data/symbols/mktsymbols_v2.txt'
 
+    def get_queryset(self) -> TempSymbolQuerySet:
+        return TempSymbolQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> TempSymbolQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> TempSymbolQuerySet:
+        return super().filter(*args, **kwargs)
+
     def clear_temp(self) -> str:
         return 'DELETE FROM dataset_tempsymbol;'
 
-    def insert_naics(self) -> str:
-        return '''
-            INSERT INTO dataset_naicscode (code)
-            SELECT DISTINCT naics 
-            FROM dataset_tempsymbol as temp
-            WHERE temp.naics IS NOT NULL
-            ON CONFLICT (code) DO NOTHING;
-        '''
+        # SELECT DISTINCT naics
+        # FROM dataset_tempsymbol as temp
+        # WHERE temp.naics IS NOT NULL
 
-    def insert_sic(self) -> str:
-        return '''
-            INSERT INTO dataset_siccode (code)
-            SELECT DISTINCT sic 
-            FROM dataset_tempsymbol as temp
-            WHERE temp.sic IS NOT NULL
-            ON CONFLICT (code) DO NOTHING;
-        '''
+        # SELECT DISTINCT sic
+        # FROM dataset_tempsymbol as temp
+        # WHERE temp.sic IS NOT NULL
 
-    def insert_exchanges(self) -> str:
-        return '''
-            INSERT INTO dataset_exchange (code)
-            SELECT DISTINCT exchange 
-            FROM dataset_tempsymbol as temp
-            ON CONFLICT (code) DO NOTHING;
-        '''
+        # SELECT DISTINCT exchange
+        # FROM dataset_tempsymbol as temp
 
-    def insert_markets(self) -> str:
-        return '''
-            INSERT INTO dataset_market (code)
-            SELECT DISTINCT listed_market 
-            FROM dataset_tempsymbol as temp
-            ON CONFLICT (code) DO NOTHING;
-        '''
+        # SELECT DISTINCT listed_market
+        # FROM dataset_tempsymbol as temp
 
-    def insert_securities(self) -> str:
-        return '''
-            INSERT INTO dataset_security (code)
-            SELECT DISTINCT security_type 
-            FROM dataset_tempsymbol as temp
-            ON CONFLICT (code) DO NOTHING;
-        '''
+        # SELECT DISTINCT security_type
+        # FROM dataset_tempsymbol as temp
 
     def insert_symbols(self) -> str:
         return '''
@@ -148,12 +155,26 @@ class NaicsManager(models.Manager, ImportExportStub):
     tbl_name = 'dataset_naicscode'
     file_name = '/home/data/naics.tsv'
 
+    def insert_from_data(self, query: models.QuerySet) -> str:
+        return f'''
+            INSERT INTO {self.tbl_name} (code)
+            {query.query}
+            ON CONFLICT (code) DO NOTHING;
+        '''
+
 
 class SicManager(models.Manager, ImportExportStub):
 
     columns = 'code, description'
     tbl_name = 'dataset_siccode'
     file_name = '/home/data/sic.tsv'
+
+    def insert_from_data(self, query: models.QuerySet) -> str:
+        return f'''
+            INSERT INTO {self.tbl_name} (code)
+            {query.query}
+            ON CONFLICT (code) DO NOTHING;
+        '''
 
 
 class ExchangeManager(models.Manager, ImportExportStub):
@@ -162,6 +183,13 @@ class ExchangeManager(models.Manager, ImportExportStub):
     tbl_name = 'dataset_exchange'
     file_name = '/home/data/exchange.tsv'
 
+    def insert_from_data(self, query: models.QuerySet) -> str:
+        return f'''
+            INSERT INTO {self.tbl_name} (code)
+            {query.query}
+            ON CONFLICT (code) DO NOTHING;
+        '''
+
 
 class MarketManager(models.Manager, ImportExportStub):
 
@@ -169,12 +197,26 @@ class MarketManager(models.Manager, ImportExportStub):
     tbl_name = 'dataset_market'
     file_name = '/home/data/market.tsv'
 
+    def insert_from_data(self, query: models.QuerySet) -> str:
+        return f'''
+            INSERT INTO {self.tbl_name} (code)
+            {query.query}
+            ON CONFLICT (code) DO NOTHING;
+        '''
+
 
 class SecurityManager(models.Manager, ImportExportStub):
 
     columns = 'code, description'
     tbl_name = 'dataset_security'
     file_name = '/home/data/security.tsv'
+
+    def insert_from_data(self, query: models.QuerySet) -> str:
+        return f'''
+            INSERT INTO {self.tbl_name} (code)
+            {query.query}
+            ON CONFLICT (code) DO NOTHING;
+        '''
 
 
 class CodeStub(models.Model):
@@ -206,7 +248,8 @@ class Exchange(CodeStub):
 
 
 class Market(CodeStub):
-    pass
+
+    objects: MarketManager = MarketManager()
 
 
 class Security(CodeStub):

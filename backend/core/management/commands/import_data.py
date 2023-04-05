@@ -31,21 +31,26 @@ class Command(BaseCommand):
         cursor.execute(TempSymbol.objects.import_data())
         self.stdout.write('Import of temp symbols complete...')
 
-        cursor.execute(TempSymbol.objects.insert_exchanges())
-        cursor.execute(TempSymbol.objects.insert_markets())
-        cursor.execute(TempSymbol.objects.insert_securities())
-        cursor.execute(TempSymbol.objects.insert_naics())
-        cursor.execute(TempSymbol.objects.insert_sic())
+        cursor.execute(Exchange.objects.insert_from_data(
+            TempSymbol.objects.all().distinct_exchanges()))
+        cursor.execute(Market.objects.insert_from_data(
+            TempSymbol.objects.all().distinct_markets()))
+        cursor.execute(Security.objects.insert_from_data(
+            TempSymbol.objects.all().distinct_securities()))
+        cursor.execute(NaicsCode.objects.insert_from_data(
+            TempSymbol.objects.all().distinct_naics()))
+        cursor.execute(SicCode.objects.insert_from_data(
+            TempSymbol.objects.all().distinct_sic()))
         self.stdout.write('Insert of related data complete...')
 
         cursor.execute(TempSymbol.objects.insert_symbols())
         self.stdout.write('Insert of symbols complete...')
-        connection.close()
 
-        os.remove('/home/data/symbols/mktsymbols_v2.txt')
+        TempSymbol.objects.remove_data_file()
         self.stdout.write('File removed...')
 
         cursor.execute(TempSymbol.objects.clear_temp())
+        connection.close()
         self.stdout.write(self.style.SUCCESS('Temp Symbols cleared'))
 
         self.stdout.write(self.style.SUCCESS('Import data complete'))
