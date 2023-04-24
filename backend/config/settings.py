@@ -41,7 +41,8 @@ ALLOWED_HOSTS.extend(
 INSTALLED_APPS = [
     'admin_interface',
     'colorfield',
-    'extra_settings',
+    'subadmin',
+    'more_admin_filters',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,7 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'membership',
-    'dataset'
+    'dataset',
+    'trackrecord'
 ]
 
 MIDDLEWARE = [
