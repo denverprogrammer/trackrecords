@@ -1,10 +1,119 @@
 from core import constants
 from django.contrib import admin
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
 from subadmin import RootSubAdmin, SubAdmin
 
-from .models import Order, Portfolio, Position
+from .models import Order, Permission, Portfolio, Position
+
+
+class PermissionSubAdmin(SubAdmin):
+    model = Permission
+
+    list_display = ('collection', 'role', 'actions')
+
+    def order_permissions(self, portfolio: Portfolio):
+        _CREATE = constants.ActionType.CREATE
+        _UPDATE = constants.ActionType.UPDATE
+        _VIEW = constants.ActionType.VIEW
+        _LIST = constants.ActionType.LIST
+        _DELETE = constants.ActionType.DELETE
+
+        permission = Permission()
+        permission.collection = constants.CollectionType.FILLED_ORDER
+        permission.role = constants.RoleType.OWNER
+        permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+        permission.portfolio = portfolio
+        permission.save()
+
+        permission = Permission()
+        permission.collection = constants.CollectionType.PARTIAL_ORDER
+        permission.role = constants.RoleType.OWNER
+        permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+        permission.portfolio = portfolio
+        permission.save()
+
+        permission = Permission()
+        permission.collection = constants.CollectionType.PENDING_ORDER
+        permission.role = constants.RoleType.OWNER
+        permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+        permission.portfolio = portfolio
+        permission.save()
+
+        permission = Permission()
+        permission.collection = constants.CollectionType.CANCELLED_ORDER
+        permission.role = constants.RoleType.OWNER
+        permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+        permission.portfolio = portfolio
+        permission.save()
+
+    def save_model(self, request, obj, form, change):
+        instance: Portfolio = form.save(commit=False)
+        instance.save()
+        form.save_m2m()
+
+        print(obj)
+        print(instance)
+
+        _CREATE = constants.ActionType.CREATE
+        _UPDATE = constants.ActionType.UPDATE
+        _VIEW = constants.ActionType.VIEW
+        _LIST = constants.ActionType.LIST
+        _DELETE = constants.ActionType.DELETE
+
+        if not change:
+            permission = Permission()
+            permission.collection = constants.CollectionType.PORTFOLIO
+            permission.role = constants.RoleType.OWNER
+            permission.actions = [_UPDATE, _VIEW, _LIST, _DELETE]
+            permission.portfolio = obj
+            permission.save()
+
+            permission = Permission()
+            permission.collection = constants.CollectionType.PERMISSION
+            permission.role = constants.RoleType.OWNER
+            permission.actions = [_UPDATE, _VIEW, _LIST]
+            permission.portfolio = obj
+            permission.save()
+
+            permission = Permission()
+            permission.collection = constants.CollectionType.SUBSCRIPTION
+            permission.role = constants.RoleType.OWNER
+            permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+            permission.portfolio = obj
+            permission.save()
+
+            permission = Permission()
+            permission.collection = constants.CollectionType.OPEN_POSITION
+            permission.role = constants.RoleType.OWNER
+            permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+            permission.portfolio = obj
+            permission.save()
+
+            permission = Permission()
+            permission.collection = constants.CollectionType.CLOSED_POSITION
+            permission.role = constants.RoleType.OWNER
+            permission.actions = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+            permission.portfolio = obj
+            permission.save()
+
+            if instance.record_type is constants.RecordType.ORDER:
+                self.order_permissions(obj)
+
+        if change and obj and obj.record_type is not instance.record_type:
+            if instance.record_type is constants.RecordType.ORDER:
+                self.order_permissions(obj)
+            else:
+                query = Q(collection__in=[
+                    constants.CollectionType.FILLED_ORDER,
+                    constants.CollectionType.PARTIAL_ORDER,
+                    constants.CollectionType.PENDING_ORDER,
+                    constants.CollectionType.CANCELLED_ORDER
+                ])
+                instance.permissions.filter(query).delete()
+
+        return instance
 
 
 class OrderSubAdmin(SubAdmin):
@@ -72,7 +181,7 @@ class PositionSubAdmin(SubAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(RootSubAdmin):
-    subadmins = [PositionSubAdmin, OrderSubAdmin]
+    subadmins = [PermissionSubAdmin, PositionSubAdmin, OrderSubAdmin]
 
     search_fields = ['code', 'description']
 

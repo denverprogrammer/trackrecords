@@ -1,7 +1,7 @@
 # Create your models here.
 from core import constants
+from core.forms import ChoiceArrayField
 from dataset.models import Symbol
-from django.conf import settings
 from django.db import models
 
 
@@ -118,6 +118,9 @@ class Order(models.Model):
 
     sent_price = models.DecimalField(max_digits=9, decimal_places=2)
 
+    limit_price = models.DecimalField(
+        max_digits=9, decimal_places=2, null=True, blank=True)
+
     sent_amount = models.IntegerField()
 
     filled_stamp = models.DateTimeField(
@@ -138,3 +141,38 @@ class Order(models.Model):
 
     def __str__(self):
         return self.symbol.code
+
+
+class Permission(models.Model):
+
+    portfolio = models.ForeignKey(
+        Portfolio,
+        on_delete=models.CASCADE,
+        related_name='permissions'
+    )
+
+    collection = models.CharField(
+        max_length=15,
+        choices=constants.CollectionType.choices,
+        default=constants.CollectionType.PORTFOLIO,
+    )
+
+    role = models.CharField(
+        max_length=10,
+        choices=constants.RoleType.choices,
+        default=constants.RoleType.SUBSCRIBER,
+    )
+
+    actions = ChoiceArrayField(
+        models.CharField(
+            max_length=6,
+            choices=constants.ActionType.choices,
+            default=constants.ActionType.VIEW
+        )
+    )
+
+    class Meta:
+        ordering = ['collection', 'role']
+
+    def __str__(self):
+        return "%s %s" % (self.collection, self.role)
