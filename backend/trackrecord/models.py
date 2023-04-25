@@ -1,8 +1,114 @@
 # Create your models here.
+import typing
+
 from core import constants
 from core.forms import ChoiceArrayField
 from dataset.models import Symbol
 from django.db import models
+from django.db.models import Q
+
+
+class PermissionQuerySet(models.QuerySet['Permission']):
+    pass
+
+
+class PortfolioQuerySet(models.QuerySet['Portfolio']):
+    pass
+
+
+class PermissionManager(models.Manager['Permission']):
+    _CREATE = constants.ActionType.CREATE
+    _UPDATE = constants.ActionType.UPDATE
+    _VIEW = constants.ActionType.VIEW
+    _LIST = constants.ActionType.LIST
+    _DELETE = constants.ActionType.DELETE
+
+    _ALL = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+    _NO_CREATE = [_UPDATE, _VIEW, _LIST, _DELETE]
+    _NO_CREATE_OR_DELETE = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+
+    def default_order_permissions(self, portfolio):
+        items = []
+
+        items.append(Permission(
+            collection=constants.CollectionType.FILLED_ORDER,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.PARTIAL_ORDER,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.PENDING_ORDER,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.CANCELLED_ORDER,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+    def default_owner_permissions(self, portfolio):
+        items = []
+
+        items.append(Permission(
+            collection=constants.CollectionType.PORTFOLIO,
+            role=constants.RoleType.OWNER,
+            actions=self._NO_CREATE,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.PERMISSION,
+            role=constants.RoleType.OWNER,
+            actions=self._NO_CREATE_OR_DELETE,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.SUBSCRIPTION,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.OPEN_POSITION,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionType.CLOSED_POSITION,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL,
+            portfolio=portfolio
+        ))
+
+        return items
+
+
+class PortfolioManager(models.Manager['Portfolio']):
+
+    def get_queryset(self) -> PortfolioQuerySet:
+        return PortfolioQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> PortfolioQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> PortfolioQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class Portfolio(models.Model):
@@ -31,6 +137,8 @@ class Portfolio(models.Model):
     win_ratio = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
     total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+
+    objects: PortfolioManager = PortfolioManager()
 
     def __str__(self):
         return self.code
@@ -170,6 +278,8 @@ class Permission(models.Model):
             default=constants.ActionType.VIEW
         )
     )
+
+    objects: PermissionManager = PermissionManager()
 
     class Meta:
         ordering = ['collection', 'role']
