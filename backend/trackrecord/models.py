@@ -23,76 +23,336 @@ class PermissionManager(models.Manager['Permission']):
     _LIST = constants.ActionType.LIST
     _DELETE = constants.ActionType.DELETE
 
-    _ALL = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
-    _NO_CREATE = [_UPDATE, _VIEW, _LIST, _DELETE]
-    _NO_CREATE_OR_DELETE = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+    _NO_ACTIONS = []
+    _ALL_ACTIONS = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+    _READ_ONLY_ACTIONS = [_VIEW, _LIST]
+    _NO_CREATE_ACTIONS = [_UPDATE, _VIEW, _LIST, _DELETE]
+    _NO_CREATE_OR_DELETE_ACTIONS = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
 
-    def default_order_permissions(self, portfolio):
+    def default_permissions(self, portfolio):
         items = []
 
+        #########################
+        ##  Owner Permissions  ##
+        #########################
+
+        # Portfolio owner permissions
         items.append(Permission(
-            collection=constants.CollectionType.FILLED_ORDER,
+            collection=constants.CollectionName.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIO,
             role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            actions=self._NO_CREATE_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Permission owner permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PERMISSION,
+            group=constants.CollectionGroup.PERMISSION,
+            role=constants.RoleType.OWNER,
+            actions=self._NO_CREATE_OR_DELETE_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Subscription owner permissions
+        items.append(Permission(
+            collection=constants.CollectionName.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTION,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Position owner permissions
+        items.append(Permission(
+            collection=constants.CollectionName.OPEN_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.PARTIAL_ORDER,
+            collection=constants.CollectionName.CLOSED_POSITION,
+            group=constants.CollectionGroup.POSITION,
             role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Order order permissions
+        items.append(Permission(
+            collection=constants.CollectionName.FILLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.OWNER,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.PENDING_ORDER,
+            collection=constants.CollectionName.PARTIAL_ORDER,
+            group=constants.CollectionGroup.ORDER,
             role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.CANCELLED_ORDER,
+            collection=constants.CollectionName.PENDING_ORDER,
+            group=constants.CollectionGroup.ORDER,
             role=constants.RoleType.OWNER,
-            actions=self._ALL,
-            portfolio=portfolio
-        ))
-
-    def default_owner_permissions(self, portfolio):
-        items = []
-
-        items.append(Permission(
-            collection=constants.CollectionType.PORTFOLIO,
-            role=constants.RoleType.OWNER,
-            actions=self._NO_CREATE,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.PERMISSION,
+            collection=constants.CollectionName.CANCELLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
             role=constants.RoleType.OWNER,
-            actions=self._NO_CREATE_OR_DELETE,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        #########################
+        ##  Admin Permissions  ##
+        #########################
+
+        # Portfolio admin permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIO,
+            role=constants.RoleType.ADMIN,
+            actions=self._NO_CREATE_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Permission admin permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PERMISSION,
+            group=constants.CollectionGroup.PERMISSION,
+            role=constants.RoleType.ADMIN,
+            actions=self._NO_CREATE_OR_DELETE_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Subscription admin permissions
+        items.append(Permission(
+            collection=constants.CollectionName.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTION,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Position admin permissions
+        items.append(Permission(
+            collection=constants.CollectionName.OPEN_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.SUBSCRIPTION,
-            role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            collection=constants.CollectionName.CLOSED_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Order admin permissions
+        items.append(Permission(
+            collection=constants.CollectionName.FILLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.OPEN_POSITION,
-            role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            collection=constants.CollectionName.PARTIAL_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
 
         items.append(Permission(
-            collection=constants.CollectionType.CLOSED_POSITION,
+            collection=constants.CollectionName.PENDING_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.ADMIN,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.CANCELLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
             role=constants.RoleType.OWNER,
-            actions=self._ALL,
+            actions=self._ALL_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        ##############################
+        ##  Subscriber Permissions  ##
+        ##############################
+
+        # Portfolio subscriber permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIO,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Permission subscriber permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PERMISSION,
+            group=constants.CollectionGroup.PERMISSION,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Subscription subscriber permissions
+        items.append(Permission(
+            collection=constants.CollectionName.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTION,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Position subscriber permissions
+        items.append(Permission(
+            collection=constants.CollectionName.OPEN_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.CLOSED_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Order subscriber permissions
+        items.append(Permission(
+            collection=constants.CollectionName.FILLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.PARTIAL_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.PENDING_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.CANCELLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.SUBSCRIBER,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        #########################
+        ##  Guest Permissions  ##
+        #########################
+
+        # Portfolio guest permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIO,
+            role=constants.RoleType.GUEST,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Permission guest permissions
+        items.append(Permission(
+            collection=constants.CollectionName.PERMISSION,
+            group=constants.CollectionGroup.PERMISSION,
+            role=constants.RoleType.GUEST,
+            actions=self._READ_ONLY_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Subscription guest permissions
+        items.append(Permission(
+            collection=constants.CollectionName.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTION,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Position guest permissions
+        items.append(Permission(
+            collection=constants.CollectionName.OPEN_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.CLOSED_POSITION,
+            group=constants.CollectionGroup.POSITION,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        # Order guest permissions
+        items.append(Permission(
+            collection=constants.CollectionName.FILLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.PARTIAL_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.PENDING_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
+            portfolio=portfolio
+        ))
+
+        items.append(Permission(
+            collection=constants.CollectionName.CANCELLED_ORDER,
+            group=constants.CollectionGroup.ORDER,
+            role=constants.RoleType.GUEST,
+            actions=self._NO_ACTIONS,
             portfolio=portfolio
         ))
 
@@ -128,6 +388,14 @@ class Portfolio(models.Model):
         max_length=10,
         choices=constants.EntryType.choices,
         default=constants.EntryType.MANUAL,
+    )
+
+    allowed_roles = ChoiceArrayField(
+        models.CharField(
+            max_length=10,
+            choices=constants.RoleType.choices,
+            default=list([constants.RoleType.OWNER])
+        )
     )
 
     avg_profit = models.DecimalField(max_digits=9, decimal_places=2, null=True)
@@ -261,8 +529,14 @@ class Permission(models.Model):
 
     collection = models.CharField(
         max_length=15,
-        choices=constants.CollectionType.choices,
-        default=constants.CollectionType.PORTFOLIO,
+        choices=constants.CollectionName.choices,
+        default=constants.CollectionName.PORTFOLIO,
+    )
+
+    group = models.CharField(
+        max_length=15,
+        choices=constants.CollectionGroup.choices,
+        default=constants.CollectionGroup.PORTFOLIO,
     )
 
     role = models.CharField(
@@ -279,10 +553,12 @@ class Permission(models.Model):
         )
     )
 
+    enabled = models.BooleanField(default=False)
+
     objects: PermissionManager = PermissionManager()
 
     class Meta:
-        ordering = ['collection', 'role']
+        ordering = ['role', 'group', 'collection']
 
     def __str__(self):
-        return "%s %s" % (self.collection, self.role)
+        return "%s %s" % (self.role, self.collection)

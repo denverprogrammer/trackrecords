@@ -11,39 +11,14 @@ from .models import Order, Permission, PermissionManager, Portfolio, Position
 class PermissionSubAdmin(SubAdmin):
     model = Permission
 
-    list_display = ('collection', 'role', 'actions')
+    list_display = ('role', 'collection', 'actions', 'enabled')
 
-    def save_model(self, request, obj, form, change):
-        # instance: Portfolio = form.save(commit=False)
-        # instance.save()
-        # form.save_m2m()
-
-        print(obj)
-        # print(instance)
-
-        manager: PermissionManager = Permission.objects
-        items = []
-
-        print('=============== testing permissions ===============')
-
-        if not change and obj.record_type is constants.RecordType.ORDER:
-            print('=============== create permissions ===============')
-            items = items + manager.default_owner_permissions(obj)
-            items = items + manager.default_order_permissions(obj)
-        elif change and obj and obj.record_type is constants.RecordType.ORDER:
-            print('=============== update permissions ===============')
-            items = items + manager.default_order_permissions(obj)
-        elif change and obj and obj.record_type is not constants.RecordType.ORDER:
-            print('=============== delete permissions ===============')
-            obj.permissions.filter(collection__in=manager._ALL).delete()
-
-        if items.count() > 0:
-            print('=============== bulk create permissions ===============')
-            manager.bulk_create(items, 100, True, False)
-
-        print('=============== finished permissions ===============')
-
-        super(PermissionSubAdmin, self).save_model(request, obj, form, change)
+    readonly_fields = [
+        'collection',
+        'role',
+        'group',
+        'enabled',
+    ]
 
 
 class OrderSubAdmin(SubAdmin):
@@ -136,9 +111,22 @@ class PortfolioAdmin(RootSubAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('code', 'description', 'initial_capital', 'record_type', 'entry_type')
+            'fields': ('code', 'description', 'initial_capital', 'record_type', 'entry_type', 'allowed_roles')
         }),
         ('Calculations', {
             'fields': ('avg_profit', 'avg_duration', 'win_ratio', 'total_cagr')
         })
     )
+
+    def save_model(self, request, obj, form, change):
+        # instance: Portfolio = form.save(commit=False)
+        # instance.save()
+        # form.save_m2m()
+
+        super(PortfolioAdmin, self).save_model(request, obj, form, change)
+
+        manager: PermissionManager = Permission.objects
+
+        if not change:
+            items = manager.default_permissions(obj)
+            manager.bulk_create(items, None, True)

@@ -40,7 +40,7 @@ class RecordType(models.TextChoices):
     POSITION = 'position'
 
 
-class CollectionType(models.TextChoices):
+class CollectionName(models.TextChoices):
     PORTFOLIO = 'portfolio'
     PERMISSION = 'permission'
     SUBSCRIPTION = 'subscription'
@@ -52,6 +52,14 @@ class CollectionType(models.TextChoices):
 
     OPEN_POSITION = 'open_position'
     CLOSED_POSITION = 'closed_position'
+
+
+class CollectionGroup(models.TextChoices):
+    PORTFOLIO = 'portfolio'
+    PERMISSION = 'permission'
+    SUBSCRIPTION = 'subscription'
+    ORDER = 'order'
+    POSITION = 'position'
 
 
 class RoleType(models.TextChoices):
