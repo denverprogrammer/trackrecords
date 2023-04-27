@@ -7,7 +7,22 @@ from django.http import HttpRequest
 from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
 
-from .models import Order, Permission, PermissionManager, Portfolio, Position
+from .models import (
+    Order,
+    Permission,
+    PermissionManager,
+    Portfolio,
+    Position,
+    Subscription,
+)
+
+
+class SubscriptionSubAdmin(SubAdmin):
+    model = Subscription
+
+    search_fields = ['user__username']
+
+    list_display = ('user', 'role', 'portfolio')
 
 
 class PermissionSubAdmin(SubAdmin):
@@ -101,7 +116,12 @@ class PositionSubAdmin(SubAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(RootSubAdmin):
-    subadmins = [PermissionSubAdmin, PositionSubAdmin, OrderSubAdmin]
+    subadmins = [
+        PermissionSubAdmin,
+        SubscriptionSubAdmin,
+        PositionSubAdmin,
+        OrderSubAdmin
+    ]
 
     search_fields = ['code', 'description']
 
@@ -139,6 +159,11 @@ class PortfolioAdmin(RootSubAdmin):
         manager: PermissionManager = Permission.objects
 
         if not change:
+            subscription = Subscription()
+            subscription.portfolio = obj
+            subscription.user = request.user
+            subscription.role = constants.RoleType.OWNER
+            subscription.save()
             items = manager.default_permissions(obj)
             manager.bulk_create(items, None, True)
 

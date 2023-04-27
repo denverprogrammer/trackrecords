@@ -4,8 +4,8 @@ import typing
 from core import constants
 from core.forms import ChoiceArrayField
 from dataset.models import Symbol
+from django.conf import settings
 from django.db import models
-from django.db.models import Q
 
 
 class PermissionQuerySet(models.QuerySet['Permission']):
@@ -13,6 +13,10 @@ class PermissionQuerySet(models.QuerySet['Permission']):
 
 
 class PortfolioQuerySet(models.QuerySet['Portfolio']):
+    pass
+
+
+class SubscriptionQuerySet(models.QuerySet['Subscription']):
     pass
 
 
@@ -372,6 +376,18 @@ class PortfolioManager(models.Manager['Portfolio']):
         return super().filter(*args, **kwargs)
 
 
+class SubscriptionManager(models.Manager['Subscription']):
+
+    def get_queryset(self) -> SubscriptionQuerySet:
+        return SubscriptionQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> SubscriptionQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> SubscriptionQuerySet:
+        return super().filter(*args, **kwargs)
+
+
 class Portfolio(models.Model):
     code = models.CharField(max_length=32, db_index=True)
 
@@ -563,3 +579,29 @@ class Permission(models.Model):
 
     def __str__(self):
         return "%s %s" % (self.role, self.collection)
+
+
+class Subscription(models.Model):
+
+    portfolio = models.ForeignKey(
+        Portfolio,
+        on_delete=models.CASCADE,
+        related_name='subscriptions'
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='subscriptions'
+    )
+
+    role = models.CharField(
+        max_length=10,
+        choices=constants.RoleType.choices,
+        default=constants.RoleType.OWNER,
+    )
+
+    objects: SubscriptionManager = SubscriptionManager()
+
+    def __str__(self):
+        return "%s %s" % (self.user.username, self.portfolio.code)
