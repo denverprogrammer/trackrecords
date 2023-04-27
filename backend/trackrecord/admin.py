@@ -1,8 +1,10 @@
+import typing
+
 from core import constants
+from django import forms
 from django.contrib import admin
-from django.db.models import Q
-from django.urls import reverse
-from django.utils.html import format_html
+from django.http import HttpRequest
+from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
 
 from .models import Order, Permission, PermissionManager, Portfolio, Position
@@ -11,7 +13,14 @@ from .models import Order, Permission, PermissionManager, Portfolio, Position
 class PermissionSubAdmin(SubAdmin):
     model = Permission
 
-    list_display = ('role', 'collection', 'actions', 'enabled')
+    list_display = ('role', 'group', 'collection', 'actions', 'enabled')
+
+    list_filter = (
+        ('enabled', DropdownFilter),
+        ('role', DropdownFilter),
+        ('group', DropdownFilter),
+        ('collection', DropdownFilter),
+    )
 
     readonly_fields = [
         'collection',
@@ -19,6 +28,12 @@ class PermissionSubAdmin(SubAdmin):
         'group',
         'enabled',
     ]
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        return False
 
 
 class OrderSubAdmin(SubAdmin):
@@ -118,11 +133,7 @@ class PortfolioAdmin(RootSubAdmin):
         })
     )
 
-    def save_model(self, request, obj, form, change):
-        # instance: Portfolio = form.save(commit=False)
-        # instance.save()
-        # form.save_m2m()
-
+    def save_model(self, request: HttpRequest, obj: Portfolio, form: forms.ModelForm, change: bool):
         super(PortfolioAdmin, self).save_model(request, obj, form, change)
 
         manager: PermissionManager = Permission.objects
@@ -130,3 +141,15 @@ class PortfolioAdmin(RootSubAdmin):
         if not change:
             items = manager.default_permissions(obj)
             manager.bulk_create(items, None, True)
+
+        permissions = manager.all().filter(portfolio__id=obj.id)
+
+        for item in permissions:
+            is_order_record = obj.record_type == constants.RecordType.ORDER
+            is_order_group = item.group == constants.CollectionGroup.ORDER
+            item.enabled = item.role in obj.allowed_roles
+
+            if not is_order_record and is_order_group:
+                item.enabled = False
+
+        manager.bulk_update(permissions, ['enabled'])

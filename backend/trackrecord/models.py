@@ -27,7 +27,8 @@ class PermissionManager(models.Manager['Permission']):
     _ALL_ACTIONS = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
     _READ_ONLY_ACTIONS = [_VIEW, _LIST]
     _NO_CREATE_ACTIONS = [_UPDATE, _VIEW, _LIST, _DELETE]
-    _NO_CREATE_OR_DELETE_ACTIONS = [_CREATE, _UPDATE, _VIEW, _LIST, _DELETE]
+    _NO_DELETE_ACTIONS = [_CREATE, _UPDATE, _VIEW, _LIST]
+    _NO_CREATE_OR_DELETE_ACTIONS = [_UPDATE, _VIEW, _LIST]
 
     def default_permissions(self, portfolio):
         items = []
@@ -122,7 +123,7 @@ class PermissionManager(models.Manager['Permission']):
             collection=constants.CollectionName.PORTFOLIO,
             group=constants.CollectionGroup.PORTFOLIO,
             role=constants.RoleType.ADMIN,
-            actions=self._NO_CREATE_ACTIONS,
+            actions=self._NO_CREATE_OR_DELETE_ACTIONS,
             portfolio=portfolio
         ))
 
@@ -189,7 +190,7 @@ class PermissionManager(models.Manager['Permission']):
         items.append(Permission(
             collection=constants.CollectionName.CANCELLED_ORDER,
             group=constants.CollectionGroup.ORDER,
-            role=constants.RoleType.OWNER,
+            role=constants.RoleType.ADMIN,
             actions=self._ALL_ACTIONS,
             portfolio=portfolio
         ))
@@ -394,7 +395,7 @@ class Portfolio(models.Model):
         models.CharField(
             max_length=10,
             choices=constants.RoleType.choices,
-            default=list([constants.RoleType.OWNER])
+            default=constants.RoleType.OWNER
         )
     )
 
