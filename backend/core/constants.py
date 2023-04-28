@@ -75,3 +75,39 @@ class ActionType(models.TextChoices):
     LIST = 'list'
     UPDATE = 'update'
     DELETE = 'delete'
+
+
+NO_ACTIONS = []
+
+ALL_ACTIONS = [
+    ActionType.CREATE,
+    ActionType.UPDATE,
+    ActionType.VIEW,
+    ActionType.LIST,
+    ActionType.DELETE
+]
+
+READ_ONLY_ACTIONS = [
+    ActionType.VIEW,
+    ActionType.LIST
+]
+
+NO_CREATE_ACTIONS = [
+    ActionType.UPDATE,
+    ActionType.VIEW,
+    ActionType.LIST,
+    ActionType.DELETE
+]
+
+NO_DELETE_ACTIONS = [
+    ActionType.CREATE,
+    ActionType.UPDATE,
+    ActionType.VIEW,
+    ActionType.LIST
+]
+
+NO_CREATE_OR_DELETE_ACTIONS = [
+    ActionType.UPDATE,
+    ActionType.VIEW,
+    ActionType.LIST
+]

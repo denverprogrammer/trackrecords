@@ -164,7 +164,10 @@ class PortfolioAdmin(RootSubAdmin):
             subscription.user = request.user
             subscription.role = constants.RoleType.OWNER
             subscription.save()
-            items = manager.default_permissions(obj)
+            items = manager.default_owner_permissions(obj)
+            items += manager.default_admin_permissions(obj)
+            items += manager.default_subscription_permissions(obj)
+            items += manager.default_guest_permissions(obj)
             manager.bulk_create(items, None, True)
 
         permissions = manager.all().filter(portfolio__id=obj.id)
