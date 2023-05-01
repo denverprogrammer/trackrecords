@@ -1,26 +1,94 @@
-# Create your models here.
+
+import os
 import typing
+from io import BytesIO
+from urllib.request import urlopen
+from zipfile import ZipFile
 
 from core import constants
-from core.forms import ChoiceArrayField
-from dataset.models import Symbol
+from core.models._models import (
+    _Exchange,
+    _Market,
+    _NaicsCode,
+    _Order,
+    _Permission,
+    _Portfolio,
+    _Position,
+    _Security,
+    _SicCode,
+    _Subscription,
+    _Symbol,
+    _TempSymbol,
+)
+from core.models._querysets import (
+    OrderQuerySet,
+    PermissionQuerySet,
+    PortfolioQuerySet,
+    PositionQuerySet,
+    SubscriptionQuerySet,
+    SymbolQuerySet,
+    TempSymbolQuerySet,
+)
 from django.conf import settings
 from django.db import models
+from django.db.backends.utils import CursorWrapper
 
 
-class PermissionQuerySet(models.QuerySet['Permission']):
-    pass
+class ImportExportStub(object):
+    import_columns = []
+    insert_columns = []
+    tbl_name = None
+    file_name = None
+    download_url = None
+    extract_folder = None
+    extract_file = None
+
+    def download_data_file(self) -> None:
+        response = urlopen(self.download_url)
+        zipfile = ZipFile(BytesIO(response.read()))
+        zipfile.extractall(path=self.extract_folder)
+
+    def remove_data_file(self) -> None:
+        os.remove(self.file_name)
+
+    def get_import_columns(self) -> str:
+        return ', '.join(self.import_columns)
+
+    def get_insert_columns(self) -> str:
+        return ', '.join(self.insert_columns)
+
+    def import_from_file(self, cursor: CursorWrapper) -> None:
+        sql = f'''
+            COPY {self.tbl_name} ({self.get_import_columns()})
+            FROM '{self.file_name}'
+            DELIMITER E'\t' CSV HEADER;
+        '''
+
+        cursor.execute(sql)
+
+    def export_to_file(self, cursor: CursorWrapper) -> None:
+        sql = f'''
+            COPY (select {self.get_import_columns()} from {self.tbl_name})
+            TO '{self.file_name}'
+            WITH DELIMITER E'\t' CSV HEADER;
+        '''
+
+        cursor.execute(sql)
+
+    def insert_from_temp(self, cursor: CursorWrapper, query: models.QuerySet) -> None:
+        sql = f'''
+            INSERT INTO {self.tbl_name} ({self.get_insert_columns()})
+            {query.query}
+            ON CONFLICT ({self.insert_columns[0]}) DO NOTHING;
+        '''
+
+        cursor.execute(sql)
+
+    def clear_table(self, cursor: CursorWrapper) -> str:
+        cursor.execute(f'DELETE FROM {self.tbl_name};')
 
 
-class PortfolioQuerySet(models.QuerySet['Portfolio']):
-    pass
-
-
-class SubscriptionQuerySet(models.QuerySet['Subscription']):
-    pass
-
-
-class PermissionManager(models.Manager['Permission']):
+class PermissionManager(models.Manager[_Permission]):
 
     def default_owner_permissions(self, portfolio):
         items = []
@@ -102,12 +170,10 @@ class PermissionManager(models.Manager['Permission']):
             portfolio=portfolio
         ))
 
+        return items
+
     def default_admin_permissions(self, portfolio):
         items = []
-
-        #########################
-        ##  Admin Permissions  ##
-        #########################
 
         # Portfolio admin permissions
         items.append(self.create(
@@ -352,8 +418,17 @@ class PermissionManager(models.Manager['Permission']):
 
         return items
 
+    def get_queryset(self) -> PermissionQuerySet:
+        return PermissionQuerySet(model=self.model, using=self._db, hints=self._hints)
 
-class PortfolioManager(models.Manager['Portfolio']):
+    def all(self) -> PermissionQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> PermissionQuerySet:
+        return super().filter(*args, **kwargs)
+
+
+class PortfolioManager(models.Manager[_Portfolio]):
 
     def get_queryset(self) -> PortfolioQuerySet:
         return PortfolioQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -365,7 +440,7 @@ class PortfolioManager(models.Manager['Portfolio']):
         return super().filter(*args, **kwargs)
 
 
-class SubscriptionManager(models.Manager['Subscription']):
+class SubscriptionManager(models.Manager[_Subscription]):
 
     def get_queryset(self) -> SubscriptionQuerySet:
         return SubscriptionQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -377,220 +452,117 @@ class SubscriptionManager(models.Manager['Subscription']):
         return super().filter(*args, **kwargs)
 
 
-class Portfolio(models.Model):
-    code = models.CharField(max_length=32, db_index=True)
+class SymbolManager(models.Manager[_Symbol], ImportExportStub):
 
-    description = models.CharField(max_length=64)
+    insert_columns = [
+        'code',
+        'description',
+        'exchange_id',
+        'market_id',
+        'security_id',
+        'sic_id',
+        'frontmonth',
+        'naics_id'
+    ]
+    tbl_name = 'dataset_symbol'
 
-    initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
+    def get_queryset(self) -> SymbolQuerySet:
+        return SymbolQuerySet(model=self.model, using=self._db, hints=self._hints)
 
-    record_type = models.CharField(
-        max_length=8,
-        choices=constants.RecordType.choices,
-        default=constants.RecordType.ORDER,
-    )
+    def all(self) -> SymbolQuerySet:
+        return super().all()
 
-    entry_type = models.CharField(
-        max_length=10,
-        choices=constants.EntryType.choices,
-        default=constants.EntryType.MANUAL,
-    )
-
-    allowed_roles = ChoiceArrayField(
-        models.CharField(
-            max_length=10,
-            choices=constants.RoleType.choices,
-            default=constants.RoleType.OWNER
-        )
-    )
-
-    avg_profit = models.DecimalField(max_digits=9, decimal_places=2, null=True)
-
-    avg_duration = models.DurationField(null=True)
-
-    win_ratio = models.DecimalField(max_digits=5, decimal_places=2, null=True)
-
-    total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
-
-    objects: PortfolioManager = PortfolioManager()
-
-    def __str__(self):
-        return self.code
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> SymbolQuerySet:
+        return super().filter(*args, **kwargs)
 
 
-class Position(models.Model):
-    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE)
+class TempSymbolManager(models.Manager[_TempSymbol], ImportExportStub):
 
-    symbol = models.ForeignKey(
-        Symbol,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+    import_columns = [
+        'symbol',
+        'description',
+        'exchange',
+        'listed_market',
+        'security_type',
+        'sic',
+        'frontmonth',
+        'naics'
+    ]
+    tbl_name = 'dataset_tempsymbol'
+    download_url = 'https://www.iqfeed.net/downloads/download_file.cfm?type=mktsymbols'
+    extract_folder = '/home/data/symbols'
+    extract_file = '/mktsymbols_v2.txt'
+    file_name = '/home/data/symbols/mktsymbols_v2.txt'
 
-    trend_type = models.CharField(
-        max_length=5,
-        choices=constants.TrendType.choices,
-        default=constants.TrendType.LONG,
-    )
+    def get_queryset(self) -> TempSymbolQuerySet:
+        return TempSymbolQuerySet(model=self.model, using=self._db, hints=self._hints)
 
-    position_status = models.CharField(
-        max_length=6,
-        choices=constants.PositionStatus.choices,
-        default=constants.PositionStatus.OPEN,
-    )
+    def all(self) -> TempSymbolQuerySet:
+        return super().all()
 
-    entry_stamp = models.DateTimeField(auto_now=False, auto_now_add=False)
-
-    entry_price = models.DecimalField(max_digits=9, decimal_places=2)
-
-    entry_amount = models.IntegerField()
-
-    exit_stamp = models.DateTimeField(
-        auto_now=False,
-        auto_now_add=False,
-        blank=True,
-        null=True
-    )
-
-    exit_price = models.DecimalField(
-        max_digits=9,
-        decimal_places=2,
-        blank=True,
-        null=True
-    )
-
-    exit_amount = models.IntegerField(blank=True, null=True)
-
-    def __str__(self):
-        return self.portfolio.code
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> TempSymbolQuerySet:
+        return super().filter(*args, **kwargs)
 
 
-class Order(models.Model):
-    symbol = models.ForeignKey(Symbol, on_delete=models.CASCADE)
+class NaicsManager(models.Manager[_NaicsCode], ImportExportStub):
 
-    position = models.ForeignKey(
-        Position,
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE
-    )
-
-    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE)
-
-    order_type = models.CharField(
-        max_length=10,
-        choices=constants.OrderType.choices,
-        default=constants.OrderType.MARKET,
-    )
-
-    order_action = models.CharField(
-        max_length=4,
-        choices=constants.OrderAction.choices,
-        default=constants.OrderAction.BUY,
-    )
-
-    order_status = models.CharField(
-        max_length=10,
-        choices=constants.OrderStatus.choices,
-        default=constants.OrderStatus.PENDING,
-    )
-
-    sent_stamp = models.DateTimeField(auto_now=False, auto_now_add=False)
-
-    sent_price = models.DecimalField(max_digits=9, decimal_places=2)
-
-    limit_price = models.DecimalField(
-        max_digits=9, decimal_places=2, null=True, blank=True)
-
-    sent_amount = models.IntegerField()
-
-    filled_stamp = models.DateTimeField(
-        auto_now=False,
-        auto_now_add=False,
-        null=True,
-        blank=True
-    )
-
-    filled_price = models.DecimalField(
-        max_digits=9,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-
-    filled_amount = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return self.symbol.code
+    insert_columns = ['code']
+    import_columns = ['code', 'description']
+    tbl_name = 'dataset_naicscode'
+    file_name = '/home/data/naics.tsv'
 
 
-class Permission(models.Model):
+class SicManager(models.Manager[_SicCode], ImportExportStub):
 
-    portfolio = models.ForeignKey(
-        Portfolio,
-        on_delete=models.CASCADE,
-        related_name='permissions'
-    )
-
-    collection = models.CharField(
-        max_length=15,
-        choices=constants.CollectionName.choices,
-        default=constants.CollectionName.PORTFOLIO,
-    )
-
-    group = models.CharField(
-        max_length=15,
-        choices=constants.CollectionGroup.choices,
-        default=constants.CollectionGroup.PORTFOLIO,
-    )
-
-    role = models.CharField(
-        max_length=10,
-        choices=constants.RoleType.choices,
-        default=constants.RoleType.SUBSCRIBER,
-    )
-
-    actions = ChoiceArrayField(
-        models.CharField(
-            max_length=6,
-            choices=constants.ActionType.choices,
-            default=constants.ActionType.VIEW
-        )
-    )
-
-    enabled = models.BooleanField(default=False)
-
-    objects: PermissionManager = PermissionManager()
-
-    class Meta:
-        ordering = ['role', 'group', 'collection']
-
-    def __str__(self):
-        return "%s %s" % (self.role, self.collection)
+    insert_columns = ['code']
+    import_columns = ['code', 'description']
+    tbl_name = 'dataset_siccode'
+    file_name = '/home/data/sic.tsv'
 
 
-class Subscription(models.Model):
+class ExchangeManager(models.Manager[_Exchange], ImportExportStub):
 
-    portfolio = models.ForeignKey(
-        Portfolio,
-        on_delete=models.CASCADE,
-        related_name='subscriptions'
-    )
+    insert_columns = ['code']
+    import_columns = ['code', 'description']
+    tbl_name = 'dataset_exchange'
+    file_name = '/home/data/exchange.tsv'
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='subscriptions'
-    )
 
-    role = models.CharField(
-        max_length=10,
-        choices=constants.RoleType.choices,
-        default=constants.RoleType.OWNER,
-    )
+class MarketManager(models.Manager[_Market], ImportExportStub):
 
-    objects: SubscriptionManager = SubscriptionManager()
+    insert_columns = ['code']
+    import_columns = ['code', 'description']
+    tbl_name = 'dataset_market'
+    file_name = '/home/data/market.tsv'
 
-    def __str__(self):
-        return "%s %s" % (self.user.username, self.portfolio.code)
+
+class SecurityManager(models.Manager[_Security], ImportExportStub):
+
+    insert_columns = ['code']
+    import_columns = ['code', 'description']
+    tbl_name = 'dataset_security'
+    file_name = '/home/data/security.tsv'
+
+
+class OrderManager(models.Manager[_Order]):
+
+    def get_queryset(self) -> OrderQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> OrderQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> OrderQuerySet:
+        return super().filter(*args, **kwargs)
+
+
+class PositionManager(models.Manager[_Position]):
+
+    def get_queryset(self) -> PositionQuerySet:
+        return PositionQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> PositionQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> PositionQuerySet:
+        return super().filter(*args, **kwargs)

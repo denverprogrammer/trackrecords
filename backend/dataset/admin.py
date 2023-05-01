@@ -1,16 +1,16 @@
+from core.models import Exchange, Market, NaicsCode, Security, SicCode, Symbol
 from django.contrib import admin
 from django.urls import reverse
+from django.utils import safestring
 from django.utils.html import format_html
 from more_admin_filters import RelatedDropdownFilter
-
-from .models import Exchange, Market, NaicsCode, Security, SicCode, Symbol
 
 
 class NamedAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
     search_fields = ['code', 'description']
 
-    def admin_link(self, obj):
+    def admin_link(self, obj) -> safestring.SafeText | None:
         return format_html(
             '<a href="{}" title="{}">{}</a>',
             reverse('admin:%s_%s_change' % (obj._meta.app_label,
@@ -18,13 +18,6 @@ class NamedAdmin(admin.ModelAdmin):
             obj.description,
             obj.code,
         )
-
-    # def admin_link(self, obj):
-    #     return format_html(
-    #         '<a href="{}">{}</a>',
-    #         reverse('admin:%s_%s_change' % (obj._meta.app_label,
-    #                 obj._meta.model_name),  args=[obj.id]), obj.code,
-    #     )
 
 
 @admin.register(NaicsCode)
@@ -82,21 +75,21 @@ class SymbolAdmin(NamedAdmin, admin.ModelAdmin):
     ]
 
     @admin.display(ordering='naics__code', description='NAICS')
-    def naics_link(self, obj):
+    def naics_link(self, obj) -> safestring.SafeText | None:
         return self.admin_link(obj.naics) if obj and obj.naics else None
 
     @admin.display(ordering='sic__code', description='SIC')
-    def sic_link(self, obj):
+    def sic_link(self, obj) -> safestring.SafeText | None:
         return self.admin_link(obj.sic) if obj and obj.sic else None
 
     @admin.display(ordering='exchange__code', description='exchange')
-    def exchange_link(self, obj):
+    def exchange_link(self, obj) -> safestring.SafeText | None:
         return self.admin_link(obj.exchange) if obj.exchange else None
 
     @admin.display(ordering='market__code', description='market')
-    def market_link(self, obj):
+    def market_link(self, obj) -> safestring.SafeText | None:
         return self.admin_link(obj.market) if obj.market else None
 
     @admin.display(ordering='security__code', description='security')
-    def security_link(self, obj):
+    def security_link(self, obj) -> safestring.SafeText | None:
         return self.admin_link(obj.security) if obj.security else None

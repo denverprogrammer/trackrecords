@@ -1,13 +1,7 @@
 import typing
 
 from core import constants
-from django import forms
-from django.contrib import admin
-from django.http import HttpRequest
-from more_admin_filters import DropdownFilter
-from subadmin import RootSubAdmin, SubAdmin
-
-from .models import (
+from core.models import (
     Order,
     Permission,
     PermissionManager,
@@ -15,6 +9,11 @@ from .models import (
     Position,
     Subscription,
 )
+from django import forms
+from django.contrib import admin
+from django.http import HttpRequest
+from more_admin_filters import DropdownFilter
+from subadmin import RootSubAdmin, SubAdmin
 
 
 class SubscriptionSubAdmin(SubAdmin):
@@ -116,12 +115,12 @@ class PositionSubAdmin(SubAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(RootSubAdmin):
-    subadmins = [
-        PermissionSubAdmin,
-        SubscriptionSubAdmin,
-        PositionSubAdmin,
-        OrderSubAdmin
-    ]
+    # subadmins = [
+    #     PermissionSubAdmin,
+    #     SubscriptionSubAdmin,
+    #     PositionSubAdmin,
+    #     OrderSubAdmin
+    # ]
 
     search_fields = ['code', 'description']
 
