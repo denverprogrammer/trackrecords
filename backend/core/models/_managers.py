@@ -90,13 +90,13 @@ class ImportExportStub(object):
 
 class PermissionManager(models.Manager[_Permission]):
 
-    def default_owner_permissions(self, portfolio):
+    def default_owner_permissions(self, portfolio: _Portfolio):
         items = []
 
         # Portfolio owner permissions
         items.append(self.create(
             collection=constants.CollectionName.PORTFOLIO,
-            group=constants.CollectionGroup.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIOS,
             role=constants.RoleType.OWNER,
             actions=constants.NO_CREATE_ACTIONS,
             portfolio=portfolio
@@ -105,7 +105,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Permission owner permissions
         items.append(self.create(
             collection=constants.CollectionName.PERMISSION,
-            group=constants.CollectionGroup.PERMISSION,
+            group=constants.CollectionGroup.PERMISSIONS,
             role=constants.RoleType.OWNER,
             actions=constants.NO_CREATE_OR_DELETE_ACTIONS,
             portfolio=portfolio
@@ -114,7 +114,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Subscription owner permissions
         items.append(self.create(
             collection=constants.CollectionName.SUBSCRIPTION,
-            group=constants.CollectionGroup.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTIONS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -123,7 +123,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Position owner permissions
         items.append(self.create(
             collection=constants.CollectionName.OPEN_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -131,7 +131,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CLOSED_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -140,7 +140,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Order order permissions
         items.append(self.create(
             collection=constants.CollectionName.FILLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -148,7 +148,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PARTIAL_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -156,7 +156,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PENDING_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -164,7 +164,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CANCELLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.OWNER,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -172,13 +172,13 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_admin_permissions(self, portfolio):
+    def default_admin_permissions(self, portfolio: _Portfolio):
         items = []
 
         # Portfolio admin permissions
         items.append(self.create(
             collection=constants.CollectionName.PORTFOLIO,
-            group=constants.CollectionGroup.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIOS,
             role=constants.RoleType.ADMIN,
             actions=constants.NO_CREATE_OR_DELETE_ACTIONS,
             portfolio=portfolio
@@ -187,7 +187,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Permission admin permissions
         items.append(self.create(
             collection=constants.CollectionName.PERMISSION,
-            group=constants.CollectionGroup.PERMISSION,
+            group=constants.CollectionGroup.PERMISSIONS,
             role=constants.RoleType.ADMIN,
             actions=constants.NO_CREATE_OR_DELETE_ACTIONS,
             portfolio=portfolio
@@ -196,7 +196,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Subscription admin permissions
         items.append(self.create(
             collection=constants.CollectionName.SUBSCRIPTION,
-            group=constants.CollectionGroup.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTIONS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -205,7 +205,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Position admin permissions
         items.append(self.create(
             collection=constants.CollectionName.OPEN_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -213,7 +213,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CLOSED_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -222,7 +222,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Order admin permissions
         items.append(self.create(
             collection=constants.CollectionName.FILLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -230,7 +230,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PARTIAL_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -238,7 +238,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PENDING_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -246,7 +246,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CANCELLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.ADMIN,
             actions=constants.ALL_ACTIONS,
             portfolio=portfolio
@@ -254,13 +254,13 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_subscription_permissions(self, portfolio):
+    def default_subscription_permissions(self, portfolio: _Portfolio):
         items = []
 
         # Portfolio subscriber permissions
         items.append(self.create(
             collection=constants.CollectionName.PORTFOLIO,
-            group=constants.CollectionGroup.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIOS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -269,7 +269,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Permission subscriber permissions
         items.append(self.create(
             collection=constants.CollectionName.PERMISSION,
-            group=constants.CollectionGroup.PERMISSION,
+            group=constants.CollectionGroup.PERMISSIONS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -278,7 +278,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Subscription subscriber permissions
         items.append(self.create(
             collection=constants.CollectionName.SUBSCRIPTION,
-            group=constants.CollectionGroup.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTIONS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -287,7 +287,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Position subscriber permissions
         items.append(self.create(
             collection=constants.CollectionName.OPEN_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -295,7 +295,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CLOSED_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -304,7 +304,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Order subscriber permissions
         items.append(self.create(
             collection=constants.CollectionName.FILLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -312,7 +312,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PARTIAL_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -320,7 +320,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PENDING_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -328,7 +328,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CANCELLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.SUBSCRIBER,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -336,13 +336,13 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_guest_permissions(self, portfolio):
+    def default_guest_permissions(self, portfolio: _Portfolio):
         items = []
 
         # Portfolio guest permissions
         items.append(self.create(
             collection=constants.CollectionName.PORTFOLIO,
-            group=constants.CollectionGroup.PORTFOLIO,
+            group=constants.CollectionGroup.PORTFOLIOS,
             role=constants.RoleType.GUEST,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -351,7 +351,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Permission guest permissions
         items.append(self.create(
             collection=constants.CollectionName.PERMISSION,
-            group=constants.CollectionGroup.PERMISSION,
+            group=constants.CollectionGroup.PERMISSIONS,
             role=constants.RoleType.GUEST,
             actions=constants.READ_ONLY_ACTIONS,
             portfolio=portfolio
@@ -360,7 +360,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Subscription guest permissions
         items.append(self.create(
             collection=constants.CollectionName.SUBSCRIPTION,
-            group=constants.CollectionGroup.SUBSCRIPTION,
+            group=constants.CollectionGroup.SUBSCRIPTIONS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -369,7 +369,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Position guest permissions
         items.append(self.create(
             collection=constants.CollectionName.OPEN_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -377,7 +377,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CLOSED_POSITION,
-            group=constants.CollectionGroup.POSITION,
+            group=constants.CollectionGroup.POSITIONS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -386,7 +386,7 @@ class PermissionManager(models.Manager[_Permission]):
         # Order guest permissions
         items.append(self.create(
             collection=constants.CollectionName.FILLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -394,7 +394,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PARTIAL_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -402,7 +402,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.PENDING_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio
@@ -410,7 +410,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         items.append(self.create(
             collection=constants.CollectionName.CANCELLED_ORDER,
-            group=constants.CollectionGroup.ORDER,
+            group=constants.CollectionGroup.ORDERS,
             role=constants.RoleType.GUEST,
             actions=constants.NO_ACTIONS,
             portfolio=portfolio

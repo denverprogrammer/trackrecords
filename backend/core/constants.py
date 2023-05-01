@@ -55,11 +55,18 @@ class CollectionName(models.TextChoices):
 
 
 class CollectionGroup(models.TextChoices):
-    PORTFOLIO = 'portfolio'
-    PERMISSION = 'permission'
-    SUBSCRIPTION = 'subscription'
-    ORDER = 'order'
-    POSITION = 'position'
+    PORTFOLIOS = 'portfolios'
+    PERMISSIONS = 'permissions'
+    SUBSCRIPTIONS = 'subscriptions'
+    ORDERS = 'orders'
+    POSITIONS = 'positions'
+    SECURITIES = 'securities'
+    SYMBOLS = 'symbols'
+
+
+class AppNames(models.TextChoices):
+    DATASET = 'dataset'
+    TRACKRECORD = 'trackrecord'
 
 
 class RoleType(models.TextChoices):

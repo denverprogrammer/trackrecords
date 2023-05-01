@@ -5,7 +5,7 @@ Django command to wait for the database to be available.
 import os
 import typing
 
-from dataset.models import (
+from core.models import (
     Exchange,
     Market,
     NaicsCode,

@@ -1,5 +1,4 @@
 from core import constants
-from core.forms import ChoiceArrayField
 from core.models._managers import (
     ExchangeManager,
     MarketManager,
@@ -33,22 +32,27 @@ from django.db import models
 
 
 class NaicsCode(_NaicsCode):
+
     objects: NaicsManager = NaicsManager()
 
 
 class SicCode(_SicCode):
+
     objects: SicManager = SicManager()
 
 
 class Exchange(_Exchange):
+
     objects: ExchangeManager = ExchangeManager()
 
 
 class Market(_Market):
+
     objects: MarketManager = MarketManager()
 
 
 class Security(_Security):
+
     objects: SecurityManager = SecurityManager()
 
 
@@ -57,19 +61,19 @@ class Symbol(_Symbol):
     exchange = models.ForeignKey(
         Exchange,
         on_delete=models.CASCADE,
-        related_name='symbols'
+        related_name=constants.CollectionGroup.SYMBOLS
     )
 
     market = models.ForeignKey(
         Market,
         on_delete=models.CASCADE,
-        related_name='symbols'
+        related_name=constants.CollectionGroup.SYMBOLS
     )
 
     security = models.ForeignKey(
         Security,
         on_delete=models.CASCADE,
-        related_name='symbols'
+        related_name=constants.CollectionGroup.SYMBOLS
     )
 
     sic = models.ForeignKey(
@@ -77,7 +81,7 @@ class Symbol(_Symbol):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='symbols'
+        related_name=constants.CollectionGroup.SYMBOLS
     )
 
     naics = models.ForeignKey(
@@ -85,25 +89,28 @@ class Symbol(_Symbol):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='symbols'
+        related_name=constants.CollectionGroup.SYMBOLS
     )
 
     objects: SymbolManager = SymbolManager()
 
 
 class TempSymbol(_TempSymbol):
+
     objects: TempSymbolManager = TempSymbolManager()
 
 
 class Portfolio(_Portfolio):
+
     objects: PortfolioManager = PortfolioManager()
 
 
 class Position(_Position):
+
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name='positions'
+        related_name=constants.CollectionGroup.POSITIONS
     )
 
     symbol = models.ForeignKey(
@@ -111,7 +118,7 @@ class Position(_Position):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='positions'
+        related_name=constants.CollectionGroup.POSITIONS
     )
 
     objects: PositionManager = PositionManager()
@@ -122,7 +129,7 @@ class Order(_Order):
     symbol = models.ForeignKey(
         Symbol,
         on_delete=models.CASCADE,
-        related_name='orders'
+        related_name=constants.CollectionGroup.ORDERS
     )
 
     position = models.ForeignKey(
@@ -130,13 +137,13 @@ class Order(_Order):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name='orders'
+        related_name=constants.CollectionGroup.ORDERS
     )
 
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name='orders'
+        related_name=constants.CollectionGroup.ORDERS
     )
 
     objects: OrderManager = OrderManager()
@@ -147,7 +154,7 @@ class Permission(_Permission):
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name='permissions'
+        related_name=constants.CollectionGroup.PERMISSIONS
     )
 
     objects: PermissionManager = PermissionManager()
@@ -158,13 +165,13 @@ class Subscription(_Subscription):
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name='subscriptions'
+        related_name=constants.CollectionGroup.SUBSCRIPTIONS
     )
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='subscriptions'
+        related_name=constants.CollectionGroup.SUBSCRIPTIONS
     )
 
     objects: SubscriptionManager = SubscriptionManager()

@@ -1,94 +1,52 @@
 from core import constants
+from core.constants import AppNames
 from core.forms import ChoiceArrayField
+from core.models._stubs import _CodeStub
 from django.db import models
 
 
-class _NaicsCode(models.Model):
+class _NaicsCode(_CodeStub):
 
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
-
-    class Meta:
-        app_label = 'dataset'
-        ordering = ['code']
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
         abstract = True
 
-    def __str__(self):
-        return self.code
 
+class _SicCode(_CodeStub):
 
-class _SicCode(models.Model):
-
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
-
-    class Meta:
-        app_label = 'dataset'
-        ordering = ['code']
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
         abstract = True
 
-    def __str__(self):
-        return self.code
 
+class _Exchange(_CodeStub):
 
-class _Exchange(models.Model):
-
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
-
-    class Meta:
-        app_label = 'dataset'
-        ordering = ['code']
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
         abstract = True
 
-    def __str__(self):
-        return self.code
 
+class _Market(_CodeStub):
 
-class _Market(models.Model):
-
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
-
-    class Meta:
-        app_label = 'dataset'
-        ordering = ['code']
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
         abstract = True
 
-    def __str__(self):
-        return self.code
 
+class _Security(_CodeStub):
 
-class _Security(models.Model):
-
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
-
-    class Meta:
-        app_label = 'dataset'
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
+        abstract = True
         verbose_name_plural = 'securities'
-        ordering = ['code']
-        abstract = True
-
-    def __str__(self):
-        return self.code
 
 
-class _Symbol(models.Model):
-
-    code = models.CharField(max_length=32, unique=True)
-
-    description = models.CharField(max_length=150, null=True, blank=True)
+class _Symbol(_CodeStub):
 
     frontmonth = models.CharField(max_length=1, null=True, blank=True)
 
-    class Meta:
-        app_label = 'dataset'
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.DATASET
         abstract = True
         ordering = ['exchange__code', 'code']
 
@@ -97,6 +55,7 @@ class _Symbol(models.Model):
 
 
 class _TempSymbol(models.Model):
+
     symbol = models.CharField(max_length=32, null=True, blank=True)
 
     description = models.CharField(max_length=150, null=True, blank=True)
@@ -114,7 +73,7 @@ class _TempSymbol(models.Model):
     naics = models.CharField(max_length=16, null=True, blank=True)
 
     class Meta:
-        app_label = 'dataset'
+        app_label = AppNames.DATASET
         abstract = True
         ordering = ['symbol']
 
@@ -122,11 +81,7 @@ class _TempSymbol(models.Model):
         return f'({self.exchange.code}):{self.symbol.code}'
 
 
-class _Portfolio(models.Model):
-
-    code = models.CharField(max_length=32, db_index=True)
-
-    description = models.CharField(max_length=64)
+class _Portfolio(_CodeStub):
 
     initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -158,12 +113,9 @@ class _Portfolio(models.Model):
 
     total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
-    class Meta:
-        app_label = 'trackrecord'
+    class Meta(_CodeStub.Meta):
+        app_label = AppNames.TRACKRECORD
         abstract = True
-
-    def __str__(self):
-        return self.code
 
 
 class _Position(models.Model):
@@ -203,7 +155,7 @@ class _Position(models.Model):
     exit_amount = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        app_label = 'trackrecord'
+        app_label = AppNames.TRACKRECORD
         abstract = True
 
     def __str__(self):
@@ -260,7 +212,7 @@ class _Order(models.Model):
     filled_amount = models.IntegerField(null=True, blank=True)
 
     class Meta:
-        app_label = 'trackrecord'
+        app_label = AppNames.TRACKRECORD
         abstract = True
 
     def __str__(self):
@@ -278,7 +230,7 @@ class _Permission(models.Model):
     group = models.CharField(
         max_length=15,
         choices=constants.CollectionGroup.choices,
-        default=constants.CollectionGroup.PORTFOLIO,
+        default=constants.CollectionGroup.PORTFOLIOS,
     )
 
     role = models.CharField(
@@ -298,7 +250,7 @@ class _Permission(models.Model):
     enabled = models.BooleanField(default=False)
 
     class Meta:
-        app_label = 'trackrecord'
+        app_label = AppNames.TRACKRECORD
         abstract = True
         ordering = ['role', 'group', 'collection']
 
@@ -315,7 +267,7 @@ class _Subscription(models.Model):
     )
 
     class Meta:
-        app_label = 'trackrecord'
+        app_label = AppNames.TRACKRECORD
         abstract = True
 
     def __str__(self):

@@ -62,6 +62,7 @@ class OrderSubAdmin(SubAdmin):
         'order_status',
         'sent_stamp',
         'sent_price',
+        'limit_price',
         'sent_amount',
         'filled_stamp',
         'filled_price',
@@ -73,7 +74,7 @@ class OrderSubAdmin(SubAdmin):
             'fields': ('symbol', 'order_type', 'order_action')
         }),
         ('Sent Order', {
-            'fields': ('sent_stamp', 'sent_price', 'sent_amount')
+            'fields': ('sent_stamp', 'sent_price', 'limit_price', 'sent_amount')
         }),
         ('Filled Order', {
             'fields': ('filled_stamp', 'filled_price', 'filled_amount')
@@ -115,12 +116,12 @@ class PositionSubAdmin(SubAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(RootSubAdmin):
-    # subadmins = [
-    #     PermissionSubAdmin,
-    #     SubscriptionSubAdmin,
-    #     PositionSubAdmin,
-    #     OrderSubAdmin
-    # ]
+    subadmins = [
+        PermissionSubAdmin,
+        SubscriptionSubAdmin,
+        PositionSubAdmin,
+        OrderSubAdmin
+    ]
 
     search_fields = ['code', 'description']
 
@@ -173,7 +174,7 @@ class PortfolioAdmin(RootSubAdmin):
 
         for item in permissions:
             is_order_record = obj.record_type == constants.RecordType.ORDER
-            is_order_group = item.group == constants.CollectionGroup.ORDER
+            is_order_group = item.group == constants.CollectionGroup.ORDERS
             item.enabled = item.role in obj.allowed_roles
 
             if not is_order_record and is_order_group:
