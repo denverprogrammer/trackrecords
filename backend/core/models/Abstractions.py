@@ -5,35 +5,35 @@ from core.models._ModelStubs import CodeStub
 from django.db import models
 
 
-class _NaicsCode(CodeStub):
+class AbstractNaicsCode(CodeStub):
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _SicCode(CodeStub):
+class AbstractSicCode(CodeStub):
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Exchange(CodeStub):
+class AbstractExchange(CodeStub):
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Market(CodeStub):
+class AbstractMarket(CodeStub):
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Security(CodeStub):
+class AbstractSecurity(CodeStub):
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
@@ -41,7 +41,7 @@ class _Security(CodeStub):
         verbose_name_plural = 'securities'
 
 
-class _Symbol(CodeStub):
+class AbstractSymbol(CodeStub):
 
     frontmonth = models.CharField(max_length=1, null=True, blank=True)
 
@@ -54,7 +54,7 @@ class _Symbol(CodeStub):
         return f'({self.exchange.code}):{self.code}'
 
 
-class _TempSymbol(models.Model):
+class AbstractTempSymbol(models.Model):
 
     symbol = models.CharField(max_length=32, null=True, blank=True)
 
@@ -81,7 +81,7 @@ class _TempSymbol(models.Model):
         return f'({self.exchange.code}):{self.symbol.code}'
 
 
-class _Portfolio(CodeStub):
+class AbstractPortfolio(CodeStub):
 
     initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -118,7 +118,7 @@ class _Portfolio(CodeStub):
         abstract = True
 
 
-class _Position(models.Model):
+class AbstractPosition(models.Model):
 
     trend_type = models.CharField(
         max_length=5,
@@ -162,7 +162,7 @@ class _Position(models.Model):
         return self.portfolio.code
 
 
-class _Order(models.Model):
+class AbstractOrder(models.Model):
 
     order_type = models.CharField(
         max_length=10,
@@ -219,7 +219,7 @@ class _Order(models.Model):
         return self.symbol.code
 
 
-class _Permission(models.Model):
+class AbstractPermission(models.Model):
 
     collection = models.CharField(
         max_length=15,
@@ -258,7 +258,7 @@ class _Permission(models.Model):
         return "%s %s" % (self.role, self.collection)
 
 
-class _Subscription(models.Model):
+class AbstractSubscription(models.Model):
 
     role = models.CharField(
         max_length=10,

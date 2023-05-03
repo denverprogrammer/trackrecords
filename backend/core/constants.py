@@ -84,6 +84,18 @@ class ActionType(models.TextChoices):
     DELETE = 'delete'
 
 
+class ModelClass(models.TextChoices):
+    EXCHANGE = 'core.exchange'
+    MARKET = 'core.market'
+    SECURITY = 'core.security'
+    SIC_CODE = 'core.siccode'
+    NAICS_CODE = 'core.naicscode'
+    PORTFOLIO = 'core.portfolio'
+    POSITION = 'core.position'
+    ORDER = 'core.order'
+    SYMBOL = 'core.symbol'
+
+
 NO_ACTIONS = []
 
 ALL_ACTIONS = [

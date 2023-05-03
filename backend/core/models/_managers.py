@@ -3,20 +3,6 @@ import typing
 
 from core import constants
 from core.models._ManagerStubs import ImportExportStub
-from core.models._models import (
-    _Exchange,
-    _Market,
-    _NaicsCode,
-    _Order,
-    _Permission,
-    _Portfolio,
-    _Position,
-    _Security,
-    _SicCode,
-    _Subscription,
-    _Symbol,
-    _TempSymbol,
-)
 from core.models._querysets import (
     ExchangeQuerySet,
     MarketQuerySet,
@@ -31,12 +17,26 @@ from core.models._querysets import (
     SymbolQuerySet,
     TempSymbolQuerySet,
 )
+from core.models.Abstractions import (
+    AbstractExchange,
+    AbstractMarket,
+    AbstractNaicsCode,
+    AbstractOrder,
+    AbstractPermission,
+    AbstractPortfolio,
+    AbstractPosition,
+    AbstractSecurity,
+    AbstractSicCode,
+    AbstractSubscription,
+    AbstractSymbol,
+    AbstractTempSymbol,
+)
 from django.db import models
 
 
-class PermissionManager(models.Manager[_Permission]):
+class PermissionManager(models.Manager[AbstractPermission]):
 
-    def default_owner_permissions(self, portfolio: _Portfolio):
+    def default_owner_permissions(self, portfolio: AbstractPortfolio):
         items = []
 
         # Portfolio owner permissions
@@ -118,7 +118,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_admin_permissions(self, portfolio: _Portfolio):
+    def default_admin_permissions(self, portfolio: AbstractPortfolio):
         items = []
 
         # Portfolio admin permissions
@@ -200,7 +200,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_subscription_permissions(self, portfolio: _Portfolio):
+    def default_subscription_permissions(self, portfolio: AbstractPortfolio):
         items = []
 
         # Portfolio subscriber permissions
@@ -282,7 +282,7 @@ class PermissionManager(models.Manager[_Permission]):
 
         return items
 
-    def default_guest_permissions(self, portfolio: _Portfolio):
+    def default_guest_permissions(self, portfolio: AbstractPortfolio):
         items = []
 
         # Portfolio guest permissions
@@ -374,7 +374,7 @@ class PermissionManager(models.Manager[_Permission]):
         return super().filter(*args, **kwargs)
 
 
-class PortfolioManager(models.Manager[_Portfolio]):
+class PortfolioManager(models.Manager[AbstractPortfolio]):
 
     def calculate(self) -> None:
         pass
@@ -389,7 +389,7 @@ class PortfolioManager(models.Manager[_Portfolio]):
         return super().filter(*args, **kwargs)
 
 
-class SubscriptionManager(models.Manager[_Subscription]):
+class SubscriptionManager(models.Manager[AbstractSubscription]):
 
     def get_queryset(self) -> SubscriptionQuerySet:
         return SubscriptionQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -401,7 +401,7 @@ class SubscriptionManager(models.Manager[_Subscription]):
         return super().filter(*args, **kwargs)
 
 
-class SymbolManager(models.Manager[_Symbol], ImportExportStub):
+class SymbolManager(models.Manager[AbstractSymbol], ImportExportStub):
 
     insert_columns = [
         'code',
@@ -424,7 +424,7 @@ class SymbolManager(models.Manager[_Symbol], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class TempSymbolManager(models.Manager[_TempSymbol], ImportExportStub):
+class TempSymbolManager(models.Manager[AbstractTempSymbol], ImportExportStub):
 
     import_columns = [
         'symbol',
@@ -451,7 +451,7 @@ class TempSymbolManager(models.Manager[_TempSymbol], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class NaicsManager(models.Manager[_NaicsCode], ImportExportStub):
+class NaicsManager(models.Manager[AbstractNaicsCode], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
@@ -467,7 +467,7 @@ class NaicsManager(models.Manager[_NaicsCode], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class SicManager(models.Manager[_SicCode], ImportExportStub):
+class SicManager(models.Manager[AbstractSicCode], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
@@ -483,7 +483,7 @@ class SicManager(models.Manager[_SicCode], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class ExchangeManager(models.Manager[_Exchange], ImportExportStub):
+class ExchangeManager(models.Manager[AbstractExchange], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
@@ -499,7 +499,7 @@ class ExchangeManager(models.Manager[_Exchange], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class MarketManager(models.Manager[_Market], ImportExportStub):
+class MarketManager(models.Manager[AbstractMarket], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
@@ -515,7 +515,7 @@ class MarketManager(models.Manager[_Market], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class SecurityManager(models.Manager[_Security], ImportExportStub):
+class SecurityManager(models.Manager[AbstractSecurity], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
@@ -531,7 +531,7 @@ class SecurityManager(models.Manager[_Security], ImportExportStub):
         return super().filter(*args, **kwargs)
 
 
-class OrderManager(models.Manager[_Order]):
+class OrderManager(models.Manager[AbstractOrder]):
 
     def get_queryset(self) -> OrderQuerySet:
         return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -543,7 +543,7 @@ class OrderManager(models.Manager[_Order]):
         return super().filter(*args, **kwargs)
 
 
-class PositionManager(models.Manager[_Position]):
+class PositionManager(models.Manager[AbstractPosition]):
 
     def calculate(self) -> None:
         orders: OrderQuerySet = getattr(self.model, 'orders')

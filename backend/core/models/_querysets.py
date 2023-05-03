@@ -1,39 +1,39 @@
 from core import constants
-from core.models._models import (
-    _Exchange,
-    _Market,
-    _NaicsCode,
-    _Order,
-    _Permission,
-    _Portfolio,
-    _Position,
-    _Security,
-    _SicCode,
-    _Subscription,
-    _Symbol,
-    _TempSymbol,
+from core.models.Abstractions import (
+    AbstractExchange,
+    AbstractMarket,
+    AbstractNaicsCode,
+    AbstractOrder,
+    AbstractPermission,
+    AbstractPortfolio,
+    AbstractPosition,
+    AbstractSecurity,
+    AbstractSicCode,
+    AbstractSubscription,
+    AbstractSymbol,
+    AbstractTempSymbol,
 )
 from django.db import models
 from django.db.models import Q
 
 
-class PermissionQuerySet(models.QuerySet[_Permission]):
+class PermissionQuerySet(models.QuerySet[AbstractPermission]):
     pass
 
 
-class PortfolioQuerySet(models.QuerySet[_Portfolio]):
+class PortfolioQuerySet(models.QuerySet[AbstractPortfolio]):
     pass
 
 
-class SubscriptionQuerySet(models.QuerySet[_Subscription]):
+class SubscriptionQuerySet(models.QuerySet[AbstractSubscription]):
     pass
 
 
-class SymbolQuerySet(models.QuerySet[_Symbol]):
+class SymbolQuerySet(models.QuerySet[AbstractSymbol]):
     pass
 
 
-class TempSymbolQuerySet(models.QuerySet[_TempSymbol]):
+class TempSymbolQuerySet(models.QuerySet[AbstractTempSymbol]):
 
     def distinct_symbols(self):
         sql = '''
@@ -83,27 +83,27 @@ class TempSymbolQuerySet(models.QuerySet[_TempSymbol]):
             .values('security_type').distinct().order_by('security_type')
 
 
-class NaicsQuerySet(models.QuerySet[_NaicsCode]):
+class NaicsQuerySet(models.QuerySet[AbstractNaicsCode]):
     pass
 
 
-class SicQuerySet(models.QuerySet[_SicCode]):
+class SicQuerySet(models.QuerySet[AbstractSicCode]):
     pass
 
 
-class ExchangeQuerySet(models.QuerySet[_Exchange]):
+class ExchangeQuerySet(models.QuerySet[AbstractExchange]):
     pass
 
 
-class MarketQuerySet(models.QuerySet[_Market]):
+class MarketQuerySet(models.QuerySet[AbstractMarket]):
     pass
 
 
-class SecurityQuerySet(models.QuerySet[_Security]):
+class SecurityQuerySet(models.QuerySet[AbstractSecurity]):
     pass
 
 
-class OrderQuerySet(models.QuerySet[_Order]):
+class OrderQuerySet(models.QuerySet[AbstractOrder]):
 
     pending = Q(order_status=constants.OrderStatus.PENDING)
 
@@ -135,7 +135,7 @@ class OrderQuerySet(models.QuerySet[_Order]):
         return self.executed_orders().order_by('filled_stamp')
 
 
-class PositionQuerySet(models.QuerySet[_Position]):
+class PositionQuerySet(models.QuerySet[AbstractPosition]):
 
     def open_positions(self):
         return self.filter(position_status=constants.PositionStatus.OPEN)
