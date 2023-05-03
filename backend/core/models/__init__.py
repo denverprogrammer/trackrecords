@@ -61,19 +61,22 @@ class Symbol(_Symbol):
     exchange = models.ForeignKey(
         Exchange,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.SYMBOLS
+        related_name=constants.CollectionGroup.SYMBOLS,
+        related_query_name='core.exchange'
     )
 
     market = models.ForeignKey(
         Market,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.SYMBOLS
+        related_name=constants.CollectionGroup.SYMBOLS,
+        related_query_name='core.market'
     )
 
     security = models.ForeignKey(
         Security,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.SYMBOLS
+        related_name=constants.CollectionGroup.SYMBOLS,
+        related_query_name='core.security'
     )
 
     sic = models.ForeignKey(
@@ -81,7 +84,8 @@ class Symbol(_Symbol):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name=constants.CollectionGroup.SYMBOLS
+        related_name=constants.CollectionGroup.SYMBOLS,
+        related_query_name='core.siccode'
     )
 
     naics = models.ForeignKey(
@@ -89,7 +93,8 @@ class Symbol(_Symbol):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name=constants.CollectionGroup.SYMBOLS
+        related_name=constants.CollectionGroup.SYMBOLS,
+        related_query_name='core.naicscode'
     )
 
     objects: SymbolManager = SymbolManager()
@@ -110,7 +115,8 @@ class Position(_Position):
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.POSITIONS
+        related_name=constants.CollectionGroup.POSITIONS,
+        related_query_name='core.portfolio'
     )
 
     symbol = models.ForeignKey(
@@ -118,7 +124,8 @@ class Position(_Position):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name=constants.CollectionGroup.POSITIONS
+        related_name=constants.CollectionGroup.POSITIONS,
+        related_query_name='core.symbol'
     )
 
     objects: PositionManager = PositionManager()
@@ -130,17 +137,23 @@ class Order(_Order):
         Position,
         blank=True,
         null=True,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name=constants.CollectionGroup.ORDERS,
+        related_query_name='core.position'
     )
 
     symbol = models.ForeignKey(
         Symbol,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name=constants.CollectionGroup.ORDERS,
+        related_query_name='core.symbol'
     )
 
     portfolio = models.ForeignKey(
         Portfolio,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name=constants.CollectionGroup.ORDERS,
+        related_query_name='core.portfolio'
     )
 
     objects: OrderManager = OrderManager()
@@ -151,7 +164,8 @@ class Permission(_Permission):
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.PERMISSIONS
+        related_name=constants.CollectionGroup.PERMISSIONS,
+        related_query_name='core.portfolio'
     )
 
     objects: PermissionManager = PermissionManager()
@@ -162,13 +176,15 @@ class Subscription(_Subscription):
     portfolio = models.ForeignKey(
         Portfolio,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.SUBSCRIPTIONS
+        related_name=constants.CollectionGroup.SUBSCRIPTIONS,
+        related_query_name='core.portfolio'
     )
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.SUBSCRIPTIONS
+        related_name=constants.CollectionGroup.SUBSCRIPTIONS,
+        related_query_name='auth.user'
     )
 
     objects: SubscriptionManager = SubscriptionManager()

@@ -169,6 +169,9 @@ class PortfolioAdmin(RootSubAdmin):
 
     def save_model(self, request: HttpRequest, obj: Portfolio, form: forms.ModelForm, change: bool):
         super(PortfolioAdmin, self).save_model(request, obj, form, change)
+        print(obj.positions.__class__)
+        print(obj.positions.__class__.__name__)
+        print(obj.positions.__class__.__qualname__)
 
         manager: PermissionManager = Permission.objects
 
