@@ -126,24 +126,21 @@ class Position(_Position):
 
 class Order(_Order):
 
-    symbol = models.ForeignKey(
-        Symbol,
-        on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.ORDERS
-    )
-
     position = models.ForeignKey(
         Position,
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.ORDERS
+        on_delete=models.CASCADE
+    )
+
+    symbol = models.ForeignKey(
+        Symbol,
+        on_delete=models.CASCADE
     )
 
     portfolio = models.ForeignKey(
         Portfolio,
-        on_delete=models.CASCADE,
-        related_name=constants.CollectionGroup.ORDERS
+        on_delete=models.CASCADE
     )
 
     objects: OrderManager = OrderManager()

@@ -1,51 +1,51 @@
 from core import constants
 from core.constants import AppNames
 from core.forms import ChoiceArrayField
-from core.models._stubs import _CodeStub
+from core.models._ModelStubs import CodeStub
 from django.db import models
 
 
-class _NaicsCode(_CodeStub):
+class _NaicsCode(CodeStub):
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _SicCode(_CodeStub):
+class _SicCode(CodeStub):
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Exchange(_CodeStub):
+class _Exchange(CodeStub):
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Market(_CodeStub):
+class _Market(CodeStub):
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
 
 
-class _Security(_CodeStub):
+class _Security(CodeStub):
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
         verbose_name_plural = 'securities'
 
 
-class _Symbol(_CodeStub):
+class _Symbol(CodeStub):
 
     frontmonth = models.CharField(max_length=1, null=True, blank=True)
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
         ordering = ['exchange__code', 'code']
@@ -81,7 +81,7 @@ class _TempSymbol(models.Model):
         return f'({self.exchange.code}):{self.symbol.code}'
 
 
-class _Portfolio(_CodeStub):
+class _Portfolio(CodeStub):
 
     initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -113,7 +113,7 @@ class _Portfolio(_CodeStub):
 
     total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
-    class Meta(_CodeStub.Meta):
+    class Meta(CodeStub.Meta):
         app_label = AppNames.TRACKRECORD
         abstract = True
 

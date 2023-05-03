@@ -1,9 +1,7 @@
-from core import constants
-from core.forms import ChoiceArrayField
 from django.db import models
 
 
-class _CodeStub(models.Model):
+class CodeStub(models.Model):
 
     code = models.CharField(max_length=32, unique=True)
 

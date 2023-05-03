@@ -49,6 +49,11 @@ class PermissionSubAdmin(SubAdmin):
     def has_delete_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
         return False
 
+    def save_model(self, request: HttpRequest, obj: Permission, form: forms.ModelForm, change: bool):
+        super(PermissionSubAdmin, self).save_model(request, obj, form, change)
+
+        print(obj.portfolio.__dict__)
+
 
 class OrderSubAdmin(SubAdmin):
     model = Order
@@ -81,6 +86,12 @@ class OrderSubAdmin(SubAdmin):
         })
     )
 
+    def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
+        super(OrderSubAdmin, self).save_model(request, obj, form, change)
+
+        print(obj.position)
+        print(obj.position.orders)
+
 
 class PositionSubAdmin(SubAdmin):
     subadmins = [OrderSubAdmin]
@@ -112,6 +123,9 @@ class PositionSubAdmin(SubAdmin):
             'fields': ('exit_stamp', 'exit_price', 'exit_amount')
         })
     )
+
+    def save_model(self, request: HttpRequest, obj: Position, form: forms.ModelForm, change: bool):
+        super(PositionSubAdmin, self).save_model(request, obj, form, change)
 
 
 @admin.register(Portfolio)

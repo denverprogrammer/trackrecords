@@ -1,11 +1,8 @@
 
-import os
 import typing
-from io import BytesIO
-from urllib.request import urlopen
-from zipfile import ZipFile
 
 from core import constants
+from core.models._ManagerStubs import ImportExportStub
 from core.models._models import (
     _Exchange,
     _Market,
@@ -21,71 +18,20 @@ from core.models._models import (
     _TempSymbol,
 )
 from core.models._querysets import (
+    ExchangeQuerySet,
+    MarketQuerySet,
+    NaicsQuerySet,
     OrderQuerySet,
     PermissionQuerySet,
     PortfolioQuerySet,
     PositionQuerySet,
+    SecurityQuerySet,
+    SicQuerySet,
     SubscriptionQuerySet,
     SymbolQuerySet,
     TempSymbolQuerySet,
 )
-from django.conf import settings
 from django.db import models
-from django.db.backends.utils import CursorWrapper
-
-
-class ImportExportStub(object):
-    import_columns = []
-    insert_columns = []
-    tbl_name = None
-    file_name = None
-    download_url = None
-    extract_folder = None
-    extract_file = None
-
-    def download_data_file(self) -> None:
-        response = urlopen(self.download_url)
-        zipfile = ZipFile(BytesIO(response.read()))
-        zipfile.extractall(path=self.extract_folder)
-
-    def remove_data_file(self) -> None:
-        os.remove(self.file_name)
-
-    def get_import_columns(self) -> str:
-        return ', '.join(self.import_columns)
-
-    def get_insert_columns(self) -> str:
-        return ', '.join(self.insert_columns)
-
-    def import_from_file(self, cursor: CursorWrapper) -> None:
-        sql = f'''
-            COPY {self.tbl_name} ({self.get_import_columns()})
-            FROM '{self.file_name}'
-            DELIMITER E'\t' CSV HEADER;
-        '''
-
-        cursor.execute(sql)
-
-    def export_to_file(self, cursor: CursorWrapper) -> None:
-        sql = f'''
-            COPY (select {self.get_import_columns()} from {self.tbl_name})
-            TO '{self.file_name}'
-            WITH DELIMITER E'\t' CSV HEADER;
-        '''
-
-        cursor.execute(sql)
-
-    def insert_from_temp(self, cursor: CursorWrapper, query: models.QuerySet) -> None:
-        sql = f'''
-            INSERT INTO {self.tbl_name} ({self.get_insert_columns()})
-            {query.query}
-            ON CONFLICT ({self.insert_columns[0]}) DO NOTHING;
-        '''
-
-        cursor.execute(sql)
-
-    def clear_table(self, cursor: CursorWrapper) -> str:
-        cursor.execute(f'DELETE FROM {self.tbl_name};')
 
 
 class PermissionManager(models.Manager[_Permission]):
@@ -430,6 +376,9 @@ class PermissionManager(models.Manager[_Permission]):
 
 class PortfolioManager(models.Manager[_Portfolio]):
 
+    def calculate(self) -> None:
+        pass
+
     def get_queryset(self) -> PortfolioQuerySet:
         return PortfolioQuerySet(model=self.model, using=self._db, hints=self._hints)
 
@@ -464,7 +413,6 @@ class SymbolManager(models.Manager[_Symbol], ImportExportStub):
         'frontmonth',
         'naics_id'
     ]
-    tbl_name = 'dataset_symbol'
 
     def get_queryset(self) -> SymbolQuerySet:
         return SymbolQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -488,7 +436,6 @@ class TempSymbolManager(models.Manager[_TempSymbol], ImportExportStub):
         'frontmonth',
         'naics'
     ]
-    tbl_name = 'dataset_tempsymbol'
     download_url = 'https://www.iqfeed.net/downloads/download_file.cfm?type=mktsymbols'
     extract_folder = '/home/data/symbols'
     extract_file = '/mktsymbols_v2.txt'
@@ -508,40 +455,80 @@ class NaicsManager(models.Manager[_NaicsCode], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
-    tbl_name = 'dataset_naicscode'
     file_name = '/home/data/naics.tsv'
+
+    def get_queryset(self) -> NaicsQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> NaicsQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> NaicsQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class SicManager(models.Manager[_SicCode], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
-    tbl_name = 'dataset_siccode'
     file_name = '/home/data/sic.tsv'
+
+    def get_queryset(self) -> SicQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> SicQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> SicQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class ExchangeManager(models.Manager[_Exchange], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
-    tbl_name = 'dataset_exchange'
     file_name = '/home/data/exchange.tsv'
+
+    def get_queryset(self) -> ExchangeQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> ExchangeQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> ExchangeQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class MarketManager(models.Manager[_Market], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
-    tbl_name = 'dataset_market'
     file_name = '/home/data/market.tsv'
+
+    def get_queryset(self) -> MarketQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> MarketQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> MarketQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class SecurityManager(models.Manager[_Security], ImportExportStub):
 
     insert_columns = ['code']
     import_columns = ['code', 'description']
-    tbl_name = 'dataset_security'
     file_name = '/home/data/security.tsv'
+
+    def get_queryset(self) -> SecurityQuerySet:
+        return OrderQuerySet(model=self.model, using=self._db, hints=self._hints)
+
+    def all(self) -> SecurityQuerySet:
+        return super().all()
+
+    def filter(self, *args: typing.Any, **kwargs: typing.Any) -> SecurityQuerySet:
+        return super().filter(*args, **kwargs)
 
 
 class OrderManager(models.Manager[_Order]):
@@ -557,6 +544,12 @@ class OrderManager(models.Manager[_Order]):
 
 
 class PositionManager(models.Manager[_Position]):
+
+    def calculate(self) -> None:
+        orders: OrderQuerySet = getattr(self.model, 'orders')
+
+        for item in orders.sort_executed():
+            pass
 
     def get_queryset(self) -> PositionQuerySet:
         return PositionQuerySet(model=self.model, using=self._db, hints=self._hints)
