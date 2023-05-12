@@ -41,6 +41,7 @@ ALLOWED_HOSTS.extend(
 INSTALLED_APPS = [
     'admin_interface',
     'colorfield',
+    'django_extensions',
     'subadmin',
     'more_admin_filters',
     'django.contrib.admin',
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.PermissionMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

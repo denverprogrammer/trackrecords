@@ -44,7 +44,7 @@ class PermissionManager(models.Manager[AbstractPermission]):
             collection=constants.CollectionName.PORTFOLIO,
             group=constants.CollectionGroup.PORTFOLIOS,
             role=constants.RoleType.OWNER,
-            actions=constants.NO_CREATE_ACTIONS,
+            actions=constants.ALL_ACTIONS,
             portfolio=portfolio
         ))
 

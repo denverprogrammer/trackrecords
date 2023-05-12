@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 
 from core import constants
 from core.models import (
@@ -9,23 +10,97 @@ from core.models import (
     Position,
     Subscription,
 )
+from core.patterns import MemStorage
 from django import forms
 from django.contrib import admin
 from django.http import HttpRequest
+from django.http.request import HttpRequest
 from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
 
 
-class SubscriptionSubAdmin(SubAdmin):
+class hasAuthorizationMixin:
+
+    memStorage = MemStorage()
+    collections = []
+
+    def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        if obj is None:
+            return self.has_module_permission(request)
+
+        print(f'check if user can view {self.collections}')
+
+        test = self.memStorage.has_permissions(
+            self.collections,
+            constants.ActionType.VIEW
+        )
+        print(test)
+
+        return test
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        print(f'check if user can add {self.collections}')
+
+        test = self.memStorage.has_permissions(
+            self.collections,
+            constants.ActionType.CREATE
+        )
+        print(test)
+
+        return test
+
+    def has_change_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        print(f'check if user can update {self.collections}')
+
+        test = self.memStorage.has_permissions(
+            self.collections,
+            constants.ActionType.UPDATE
+        )
+        print(test)
+
+        return test
+
+    def has_delete_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        print(f'check if user can delete {self.collections}')
+
+        test = self.memStorage.has_permissions(
+            self.collections,
+            constants.ActionType.DELETE
+        )
+        print(test)
+
+        return test
+
+    def has_module_permission(self, request: HttpRequest | None) -> bool:
+        print(f'check if user can list {self.collections}')
+
+        test = self.memStorage.has_permissions(
+            self.collections,
+            constants.ActionType.LIST
+        )
+        print(test)
+
+        return test
+
+
+class SubscriptionSubAdmin(hasAuthorizationMixin, SubAdmin):
     model = Subscription
+
+    collections = [
+        constants.CollectionName.SUBSCRIPTION
+    ]
 
     search_fields = ['user__username']
 
     list_display = ('user', 'role', 'portfolio')
 
 
-class PermissionSubAdmin(SubAdmin):
+class PermissionSubAdmin(hasAuthorizationMixin, SubAdmin):
     model = Permission
+
+    collections = [
+        constants.CollectionName.PERMISSION
+    ]
 
     list_display = ('role', 'group', 'collection', 'actions', 'enabled')
 
@@ -43,22 +118,19 @@ class PermissionSubAdmin(SubAdmin):
         'enabled',
     ]
 
-    def has_add_permission(self, request: HttpRequest) -> bool:
-        return False
 
-    def has_delete_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        return False
+class OrderSubAdmin(hasAuthorizationMixin, SubAdmin):
 
-    def save_model(self, request: HttpRequest, obj: Permission, form: forms.ModelForm, change: bool):
-        super(PermissionSubAdmin, self).save_model(request, obj, form, change)
-
-        print(obj.portfolio.__dict__)
-
-
-class OrderSubAdmin(SubAdmin):
     model = Order
 
     autocomplete_fields = ['symbol']
+
+    collections = [
+        constants.CollectionName.FILLED_ORDER,
+        constants.CollectionName.PARTIAL_ORDER,
+        constants.CollectionName.PENDING_ORDER,
+        constants.CollectionName.CANCELLED_ORDER
+    ]
 
     list_display = (
         'symbol',
@@ -86,19 +158,40 @@ class OrderSubAdmin(SubAdmin):
         })
     )
 
+    def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        print('order module permissions ###########################')
+
+        if not self.memStorage.portfolio:
+            return False
+
+        can_view = super(OrderSubAdmin, self).has_view_permission(request, obj)
+        is_order = self.memStorage.portfolio.record_type == constants.RecordType.ORDER
+
+        print({
+            'can_view': can_view,
+            'is_order': is_order
+        })
+
+        return is_order and can_view
+
     def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
         super(OrderSubAdmin, self).save_model(request, obj, form, change)
 
-        print(obj.position)
-        print(obj.position.orders)
+        # print(obj.position)
+        # print(obj.position.orders)
 
 
-class PositionSubAdmin(SubAdmin):
+class PositionSubAdmin(hasAuthorizationMixin, SubAdmin):
     subadmins = [OrderSubAdmin]
 
     model = Position
 
-    search_fields = ['symbol']
+    autocomplete_fields = ['symbol']
+
+    collections = [
+        constants.CollectionName.OPEN_POSITION,
+        constants.CollectionName.CLOSED_POSITION
+    ]
 
     list_display = (
         'symbol',
@@ -129,12 +222,17 @@ class PositionSubAdmin(SubAdmin):
 
 
 @admin.register(Portfolio)
-class PortfolioAdmin(RootSubAdmin):
+class PortfolioAdmin(hasAuthorizationMixin, RootSubAdmin):
+
     subadmins = [
         PermissionSubAdmin,
         SubscriptionSubAdmin,
         PositionSubAdmin,
         OrderSubAdmin
+    ]
+
+    collections = [
+        constants.CollectionName.PORTFOLIO
     ]
 
     search_fields = ['code', 'description']
@@ -166,6 +264,18 @@ class PortfolioAdmin(RootSubAdmin):
             'fields': ('avg_profit', 'avg_duration', 'win_ratio', 'total_cagr')
         })
     )
+
+    def has_module_permission(self, request: HttpRequest) -> bool:
+        return True
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return True
+
+    def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        if obj is None:
+            return True
+
+        return super().has_view_permission(request, obj)
 
     def save_model(self, request: HttpRequest, obj: Portfolio, form: forms.ModelForm, change: bool):
         super(PortfolioAdmin, self).save_model(request, obj, form, change)

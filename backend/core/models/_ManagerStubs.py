@@ -34,7 +34,7 @@ class ImportExportStub(object):
 
     def import_from_file(self, cursor: CursorWrapper) -> None:
         sql = f'''
-            COPY {self.Model._meta.db_table} ({self.get_import_columns()})
+            COPY {self.model._meta.db_table} ({self.get_import_columns()})
             FROM '{self.file_name}'
             DELIMITER E'\t' CSV HEADER;
         '''
@@ -43,7 +43,7 @@ class ImportExportStub(object):
 
     def export_to_file(self, cursor: CursorWrapper) -> None:
         sql = f'''
-            COPY (select {self.get_import_columns()} from {self.Model._meta.db_table})
+            COPY (select {self.get_import_columns()} from {self.model._meta.db_table})
             TO '{self.file_name}'
             WITH DELIMITER E'\t' CSV HEADER;
         '''
@@ -52,7 +52,7 @@ class ImportExportStub(object):
 
     def insert_from_temp(self, cursor: CursorWrapper, query: models.QuerySet) -> None:
         sql = f'''
-            INSERT INTO {self.Model._meta.db_table} ({self.get_insert_columns()})
+            INSERT INTO {self.model._meta.db_table} ({self.get_insert_columns()})
             {query.query}
             ON CONFLICT ({self.insert_columns[0]}) DO NOTHING;
         '''
@@ -60,4 +60,4 @@ class ImportExportStub(object):
         cursor.execute(sql)
 
     def clear_table(self, cursor: CursorWrapper) -> str:
-        cursor.execute(f'DELETE FROM {self.Model._meta.db_table};')
+        cursor.execute(f'DELETE FROM {self.model._meta.db_table};')
