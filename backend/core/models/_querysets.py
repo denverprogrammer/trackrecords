@@ -137,6 +137,18 @@ class OrderQuerySet(models.QuerySet[AbstractOrder]):
 
 class PositionQuerySet(models.QuerySet[AbstractPosition]):
 
+    def open_position_by(self, portfolio_id: int, symbol_id: int) -> AbstractPosition:
+        return self.open_positions()\
+            .positions_by_portfolio(portfolio_id)\
+            .positions_by_symbol(symbol_id)\
+            .first()
+
+    def positions_by_portfolio(self, portfolio_id: int):
+        return self.filter(portfolio__id=portfolio_id)
+
+    def positions_by_symbol(self, symbol_id: int):
+        return self.filter(symbol__id=symbol_id)
+
     def open_positions(self):
         return self.filter(position_status=constants.PositionStatus.OPEN)
 

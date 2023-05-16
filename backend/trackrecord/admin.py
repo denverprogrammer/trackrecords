@@ -1,4 +1,5 @@
 import typing
+from functools import wraps
 from typing import Optional
 
 from core import constants
@@ -15,11 +16,13 @@ from django import forms
 from django.contrib import admin
 from django.http import HttpRequest
 from django.http.request import HttpRequest
+from django.shortcuts import redirect
+from django.urls import reverse
 from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
 
 
-class hasAuthorizationMixin:
+class AuthorizationMixin:
 
     memStorage = MemStorage()
     collections = []
@@ -71,19 +74,8 @@ class hasAuthorizationMixin:
 
         return test
 
-    def has_module_permission(self, request: HttpRequest | None) -> bool:
-        print(f'check if user can list {self.collections}')
 
-        test = self.memStorage.has_permissions(
-            self.collections,
-            constants.ActionType.LIST
-        )
-        print(test)
-
-        return test
-
-
-class SubscriptionSubAdmin(hasAuthorizationMixin, SubAdmin):
+class SubscriptionSubAdmin(AuthorizationMixin, SubAdmin):
     model = Subscription
 
     collections = [
@@ -95,7 +87,7 @@ class SubscriptionSubAdmin(hasAuthorizationMixin, SubAdmin):
     list_display = ('user', 'role', 'portfolio')
 
 
-class PermissionSubAdmin(hasAuthorizationMixin, SubAdmin):
+class PermissionSubAdmin(AuthorizationMixin, SubAdmin):
     model = Permission
 
     collections = [
@@ -119,7 +111,7 @@ class PermissionSubAdmin(hasAuthorizationMixin, SubAdmin):
     ]
 
 
-class OrderSubAdmin(hasAuthorizationMixin, SubAdmin):
+class OrderSubAdmin(AuthorizationMixin, SubAdmin):
 
     model = Order
 
@@ -175,13 +167,38 @@ class OrderSubAdmin(hasAuthorizationMixin, SubAdmin):
         return is_order and can_view
 
     def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
+
+        if obj.order_status == constants.OrderStatus.CANCELLED:
+            pass
+        elif obj.filled_amount is None and obj.sent_amount > 0:
+            obj.order_status = constants.OrderStatus.PENDING
+        elif obj.filled_amount > 0 and obj.filled_amount < obj.sent_amount:
+            obj.order_status = constants.OrderStatus.PARTIAL
+        elif obj.filled_amount == obj.sent_amount:
+            obj.order_status = constants.OrderStatus.FILLED
+
+        if obj.filled_amount and obj.filled_amount > 0 and obj.position is None:
+            obj.position = Position.objects.all().open_position_by(
+                obj.portfolio.id,
+                obj.symbol.id
+            )
+
+            if obj.position is None:
+                obj.position = Position()
+                obj.position.portfolio = obj.portfolio
+                obj.position.symbol = obj.symbol
+                obj.position.entry_stamp = obj.sent_stamp
+                obj.position.entry_price = obj.sent_price
+                obj.position.entry_amount = obj.sent_amount
+                obj.position.save()
+
         super(OrderSubAdmin, self).save_model(request, obj, form, change)
 
         # print(obj.position)
         # print(obj.position.orders)
 
 
-class PositionSubAdmin(hasAuthorizationMixin, SubAdmin):
+class PositionSubAdmin(AuthorizationMixin, SubAdmin):
     subadmins = [OrderSubAdmin]
 
     model = Position
@@ -222,7 +239,7 @@ class PositionSubAdmin(hasAuthorizationMixin, SubAdmin):
 
 
 @admin.register(Portfolio)
-class PortfolioAdmin(hasAuthorizationMixin, RootSubAdmin):
+class PortfolioAdmin(RootSubAdmin):
 
     subadmins = [
         PermissionSubAdmin,
@@ -264,18 +281,6 @@ class PortfolioAdmin(hasAuthorizationMixin, RootSubAdmin):
             'fields': ('avg_profit', 'avg_duration', 'win_ratio', 'total_cagr')
         })
     )
-
-    def has_module_permission(self, request: HttpRequest) -> bool:
-        return True
-
-    def has_add_permission(self, request: HttpRequest) -> bool:
-        return True
-
-    def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        if obj is None:
-            return True
-
-        return super().has_view_permission(request, obj)
 
     def save_model(self, request: HttpRequest, obj: Portfolio, form: forms.ModelForm, change: bool):
         super(PortfolioAdmin, self).save_model(request, obj, form, change)

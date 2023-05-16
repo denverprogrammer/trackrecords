@@ -2,8 +2,10 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
+from core import constants
 from core.models import Portfolio
 from core.patterns import MemStorage
+from django.contrib.admin.utils import unquote
 from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.urls import resolve
@@ -18,20 +20,22 @@ class PermissionMiddleware:
         self.memStorage = MemStorage()
 
     def setStorage(self, id: str | None, request: HttpRequest) -> None:
-
-        if not id or not request.user.is_authenticated:
-            return
-
-        portfolio: Portfolio = Portfolio.objects.get(pk=int(id))
+        id = int(unquote(id))
+        portfolio: Portfolio = Portfolio.objects.get(pk=id) if id else None
         subscription = None
         permissions = []
 
         if portfolio and request.user.is_authenticated:
             user_query = Q(user__username=request.user.username)
-            subscription = portfolio.subscriptions.get(user_query)
+            try:
+                subscription = portfolio.subscriptions.get(user_query)
+            except:
+                pass
 
-        if portfolio and subscription:
-            role_query = Q(role=subscription.role)
+        role_type = subscription.role if subscription else constants.Role_Type.GUEST
+
+        if portfolio:
+            role_query = Q(role=role_type)
             permissions = list(portfolio.permissions.filter(role_query))
 
         self.memStorage.portfolio = portfolio
@@ -56,65 +60,28 @@ class PermissionMiddleware:
             })
 
             match name:
-                case 'trackrecord_portfolio_add':
-                    pass
-                case 'trackrecord_portfolio_changelist':
-                    pass
-                case 'trackrecord_portfolio_change':
-                    print('portfolio change')
-                    self.setStorage(kwargs['object_id'], request)
-                case 'trackrecord_portfolio_delete':
-                    print('portfolio delete')
+                case 'trackrecord_portfolio_add' | 'trackrecord_portfolio_changelist':
+                    print('portfolio no args and ignored')
+                case 'trackrecord_portfolio_change' | 'trackrecord_portfolio_delete':
+                    print('portfolio with kwargs')
                     self.setStorage(kwargs['object_id'], request)
 
-                case 'trackrecord_portfolio_order_add':
-                    print('orders add')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_order_changelist':
-                    print('orders list')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_order_change':
-                    print('orders change')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_order_delete':
-                    print('orders delete')
+                case 'trackrecord_portfolio_order_add' | 'trackrecord_portfolio_order_changelist' | 'trackrecord_portfolio_order_change' | 'trackrecord_portfolio_order_delete':
+                    print('orders with args')
                     self.setStorage(args[0], request)
 
-                case 'trackrecord_portfolio_position_add':
-                    print('positions add')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_position_changelist':
-                    print('positions list')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_position_change':
-                    print('positions change')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_position_delete':
-                    print('positions delete')
+                case 'trackrecord_portfolio_position_add' | 'trackrecord_portfolio_position_changelist' | 'trackrecord_portfolio_position_change' | 'trackrecord_portfolio_position_delete':
+                    print('positions with args')
                     self.setStorage(args[0], request)
 
-                case 'trackrecord_portfolio_permission_add':
-                    pass
-                case 'trackrecord_portfolio_permission_changelist':
-                    print('permissions list')
+                case 'trackrecord_portfolio_permission_add' | 'trackrecord_portfolio_permission_delete':
+                    print('portfolio with args and ignored')
+                case 'trackrecord_portfolio_permission_changelist' | 'trackrecord_portfolio_permission_change':
+                    print('permissions with args')
                     self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_permission_change':
-                    print('permissions change')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_permission_delete':
-                    pass
 
-                case 'trackrecord_portfolio_subscription_add':
-                    print('subscriptions add')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_subscription_changelist':
-                    print('subscriptions list')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_subscription_change':
-                    print('subscriptions change')
-                    self.setStorage(args[0], request)
-                case 'trackrecord_portfolio_subscription_delete':
-                    print('subscriptions delete')
+                case 'trackrecord_portfolio_subscription_add' | 'trackrecord_portfolio_subscription_changelist' | 'trackrecord_portfolio_subscription_change' | 'trackrecord_portfolio_subscription_delete':
+                    print('subscriptions with args')
                     self.setStorage(args[0], request)
 
         except Exception as ex:

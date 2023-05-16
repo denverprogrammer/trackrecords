@@ -1,3 +1,6 @@
+import typing
+from typing import Iterable, Optional
+
 from core import constants
 from core.models._managers import (
     ExchangeManager,
