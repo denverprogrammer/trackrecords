@@ -12,3 +12,5 @@ https://dev.to/danilovmy/how-to-solve-the-singleton-problem-in-django-modeladmin
 
 https://github.com/typeddjango/django-stubs
 https://gearheart.io/articles/overriding-queryset-in-django/
+
+https://steelkiwi.com/blog/best-practices-working-django-models-python/

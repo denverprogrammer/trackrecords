@@ -167,35 +167,14 @@ class OrderSubAdmin(AuthorizationMixin, SubAdmin):
         return is_order and can_view
 
     def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
-
-        if obj.order_status == constants.OrderStatus.CANCELLED:
-            pass
-        elif obj.filled_amount is None and obj.sent_amount > 0:
-            obj.order_status = constants.OrderStatus.PENDING
-        elif obj.filled_amount > 0 and obj.filled_amount < obj.sent_amount:
-            obj.order_status = constants.OrderStatus.PARTIAL
-        elif obj.filled_amount == obj.sent_amount:
-            obj.order_status = constants.OrderStatus.FILLED
+        Order.objects.update_status(obj)
 
         if obj.filled_amount and obj.filled_amount > 0 and obj.position is None:
-            obj.position = Position.objects.all().open_position_by(
-                obj.portfolio.id,
-                obj.symbol.id
-            )
-
-            if obj.position is None:
-                obj.position = Position()
-                obj.position.portfolio = obj.portfolio
-                obj.position.symbol = obj.symbol
-                obj.position.entry_stamp = obj.sent_stamp
-                obj.position.entry_price = obj.sent_price
-                obj.position.entry_amount = obj.sent_amount
-                obj.position.save()
+            Position.objects.set_position(obj)
 
         super(OrderSubAdmin, self).save_model(request, obj, form, change)
-
-        # print(obj.position)
-        # print(obj.position.orders)
+        Position.objects.update_status(obj.position)
+        obj.position.save()
 
 
 class PositionSubAdmin(AuthorizationMixin, SubAdmin):
@@ -219,7 +198,9 @@ class PositionSubAdmin(AuthorizationMixin, SubAdmin):
         'entry_amount',
         'exit_stamp',
         'exit_price',
-        'exit_amount'
+        'exit_amount',
+        'real_pnl',
+        'unreal_pnl'
     )
 
     fieldsets = (

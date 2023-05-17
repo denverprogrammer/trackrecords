@@ -376,8 +376,23 @@ class PermissionManager(models.Manager[AbstractPermission]):
 
 class PortfolioManager(models.Manager[AbstractPortfolio]):
 
-    def calculate(self) -> None:
-        pass
+    def update_stats(self, portfolio: AbstractPortfolio) -> None:
+        positions: PositionQuerySet = getattr(portfolio, 'positions')
+
+        first_order = None
+
+        entry_stamp = None
+        entry_amount = 0
+        entry_price = 0
+        entry_count = 0
+
+        exit_stamp = None
+        exit_amount = 0
+        exit_price = 0
+        exit_count = 0
+
+        for item in positions.order_by('exit_stamp', 'entry_stamp'):
+            pass
 
     def get_queryset(self) -> PortfolioQuerySet:
         return PortfolioQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -542,14 +557,101 @@ class OrderManager(models.Manager[AbstractOrder]):
     def filter(self, *args: typing.Any, **kwargs: typing.Any) -> OrderQuerySet:
         return super().filter(*args, **kwargs)
 
+    def update_status(self, order: AbstractOrder) -> None:
+        if order.order_status == constants.OrderStatus.CANCELLED:
+            pass
+        elif order.filled_amount is None and order.sent_amount > 0:
+            order.order_status = constants.OrderStatus.PENDING
+        elif order.filled_amount > 0 and order.filled_amount < order.sent_amount:
+            order.order_status = constants.OrderStatus.PARTIAL
+        elif order.filled_amount == order.sent_amount:
+            order.order_status = constants.OrderStatus.FILLED
+
 
 class PositionManager(models.Manager[AbstractPosition]):
 
-    def calculate(self) -> None:
-        orders: OrderQuerySet = getattr(self.model, 'orders')
+    def update_status(self, position: AbstractPosition) -> None:
+        orders: OrderQuerySet = getattr(position, 'orders')
 
-        for item in orders.sort_executed():
-            pass
+        first_order = None
+
+        entry_stamp = None
+        entry_amount = 0
+        entry_price = 0
+        entry_count = 0
+
+        exit_stamp = None
+        exit_amount = 0
+        exit_price = 0
+        exit_count = 0
+
+        for item in orders.order_by('filled_stamp', 'sent_stamp'):
+            if item.hasAmount() == False:
+                continue
+            elif first_order is None:
+                first_order = item
+                entry_stamp = item.filled_stamp
+
+            if item.order_action == first_order.order_action:
+                entry_amount += item.filled_amount
+                entry_price += item.filled_price
+                entry_count += 1
+            else:
+                exit_stamp = item.filled_stamp
+                exit_amount += item.filled_amount
+                exit_price += item.filled_price
+                exit_count += 1
+
+        if entry_stamp:
+            position.entry_stamp = entry_stamp
+            position.entry_price = entry_price / entry_count
+            position.entry_amount = entry_amount
+
+        if exit_stamp:
+            position.exit_stamp = exit_stamp
+            position.exit_price = exit_price / exit_count
+            position.exit_amount = exit_amount
+        else:
+            position.exit_stamp = None
+            position.exit_price = None
+            position.exit_amount = None
+
+        if first_order.order_action == constants.OrderAction.BUY:
+            position.trend_type = constants.TrendType.LONG
+        elif first_order.order_action == constants.OrderAction.SELL:
+            position.trend_type = constants.TrendType.SHORT
+
+        if exit_amount > 0:
+            position.real_pnl = (exit_price - entry_price) * exit_amount
+        else:
+            position.real_pnl = 0
+
+        if entry_amount > exit_amount and exit_amount > 0:
+            position.unreal_pnl = entry_price * (exit_amount - entry_amount)
+        elif entry_amount > exit_amount and exit_amount == 0:
+            position.unreal_pnl = entry_price * entry_amount
+        else:
+            position.unreal_pnl = 0
+
+        if entry_amount == exit_amount and exit_amount > 0:
+            position.position_status = constants.PositionStatus.CLOSED
+        else:
+            position.position_status = constants.PositionStatus.OPEN
+
+    def set_position(self, oder: AbstractOrder) -> None:
+        oder.position = self.all().open_position_by(
+            oder.portfolio.id,
+            oder.symbol.id
+        )
+
+        if oder.position is None:
+            oder.position = self.model()
+            oder.position.portfolio = oder.portfolio
+            oder.position.symbol = oder.symbol
+            oder.position.entry_stamp = oder.sent_stamp
+            oder.position.entry_price = oder.sent_price
+            oder.position.entry_amount = oder.sent_amount
+            oder.position.save()
 
     def get_queryset(self) -> PositionQuerySet:
         return PositionQuerySet(model=self.model, using=self._db, hints=self._hints)

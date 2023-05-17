@@ -154,6 +154,20 @@ class AbstractPosition(models.Model):
 
     exit_amount = models.IntegerField(blank=True, null=True)
 
+    real_pnl = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=9,
+        decimal_places=2
+    )
+
+    unreal_pnl = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=9,
+        decimal_places=2
+    )
+
     class Meta:
         app_label = AppNames.TRACKRECORD
         abstract = True
@@ -217,6 +231,12 @@ class AbstractOrder(models.Model):
 
     def __str__(self):
         return self.symbol.code
+
+    def hasAmount(self) -> bool:
+        return self.order_status in [
+            constants.OrderStatus.FILLED,
+            constants.OrderStatus.PARTIAL
+        ]
 
 
 class AbstractPermission(models.Model):
