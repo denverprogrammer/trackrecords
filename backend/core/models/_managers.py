@@ -1,4 +1,5 @@
 
+import datetime
 import typing
 
 from core import constants
@@ -391,7 +392,7 @@ class PortfolioManager(models.Manager[AbstractPortfolio]):
         exit_price = 0
         exit_count = 0
 
-        for item in positions.order_by('exit_stamp', 'entry_stamp'):
+        for item in positions:
             pass
 
     def get_queryset(self) -> PortfolioQuerySet:
@@ -579,13 +580,16 @@ class PositionManager(models.Manager[AbstractPosition]):
         entry_amount = 0
         entry_price = 0
         entry_count = 0
+        entry_fees = 0
 
         exit_stamp = None
         exit_amount = 0
         exit_price = 0
         exit_count = 0
+        exit_fees = 0
+        price_difference = 0
 
-        for item in orders.order_by('filled_stamp', 'sent_stamp'):
+        for item in orders.all():
             if item.hasAmount() == False:
                 continue
             elif first_order is None:
@@ -593,41 +597,61 @@ class PositionManager(models.Manager[AbstractPosition]):
                 entry_stamp = item.filled_stamp
 
             if item.order_action == first_order.order_action:
-                entry_amount += item.filled_amount
-                entry_price += item.filled_price
+                entry_amount += item.filled_amount if item.filled_amount else 0
+                entry_price += item.filled_price if item.filled_price else 0
+                entry_fees += item.fees if item.fees else 0
                 entry_count += 1
             else:
                 exit_stamp = item.filled_stamp
-                exit_amount += item.filled_amount
-                exit_price += item.filled_price
+                exit_amount += item.filled_amount if item.filled_amount else 0
+                exit_price += item.filled_price if item.filled_price else 0
+                exit_fees += item.fees if item.fees else 0
                 exit_count += 1
 
         if entry_stamp:
             position.entry_stamp = entry_stamp
             position.entry_price = entry_price / entry_count
             position.entry_amount = entry_amount
+            position.entry_fees = entry_fees
+        else:
+            position.entry_stamp = None
+            position.entry_price = None
+            position.entry_amount = None
+            position.entry_fees = None
 
         if exit_stamp:
             position.exit_stamp = exit_stamp
             position.exit_price = exit_price / exit_count
             position.exit_amount = exit_amount
+            position.exit_fees = exit_fees
         else:
             position.exit_stamp = None
             position.exit_price = None
             position.exit_amount = None
+            position.exit_fees = None
 
         if first_order.order_action == constants.OrderAction.BUY:
             position.trend_type = constants.TrendType.LONG
         elif first_order.order_action == constants.OrderAction.SELL:
             position.trend_type = constants.TrendType.SHORT
 
+        price_difference = abs(exit_price - entry_price)
+
         if exit_amount > 0:
-            position.real_pnl = (exit_price - entry_price) * exit_amount
+            position.real_pnl = price_difference * exit_amount
         else:
             position.real_pnl = 0
 
+        if entry_amount == exit_amount and exit_amount > 0:
+            position.duration = exit_stamp - entry_stamp
+        elif entry_amount > 0 and exit_amount == 0:
+            tz_info = entry_stamp.tzinfo
+            position.duration = datetime.datetime.now(tz_info) - entry_stamp
+        else:
+            position.duration = None
+
         if entry_amount > exit_amount and exit_amount > 0:
-            position.unreal_pnl = entry_price * (exit_amount - entry_amount)
+            position.unreal_pnl = entry_price * (entry_amount - exit_amount)
         elif entry_amount > exit_amount and exit_amount == 0:
             position.unreal_pnl = entry_price * entry_amount
         else:

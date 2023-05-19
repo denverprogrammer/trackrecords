@@ -138,6 +138,13 @@ class AbstractPosition(models.Model):
 
     entry_amount = models.IntegerField()
 
+    entry_fees = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
     exit_stamp = models.DateTimeField(
         auto_now=False,
         auto_now_add=False,
@@ -154,6 +161,13 @@ class AbstractPosition(models.Model):
 
     exit_amount = models.IntegerField(blank=True, null=True)
 
+    exit_fees = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
     real_pnl = models.DecimalField(
         blank=True,
         null=True,
@@ -168,9 +182,12 @@ class AbstractPosition(models.Model):
         decimal_places=2
     )
 
+    duration = models.DurationField(null=True, blank=True)
+
     class Meta:
         app_label = AppNames.TRACKRECORD
         abstract = True
+        ordering = ['exit_stamp', 'entry_stamp']
 
     def __str__(self):
         return self.portfolio.code
@@ -225,9 +242,17 @@ class AbstractOrder(models.Model):
 
     filled_amount = models.IntegerField(null=True, blank=True)
 
+    fees = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
     class Meta:
         app_label = AppNames.TRACKRECORD
         abstract = True
+        ordering = ['filled_stamp', 'sent_stamp']
 
     def __str__(self):
         return self.symbol.code
