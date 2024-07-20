@@ -1,7 +1,9 @@
+from decimal import Decimal
+
 from core import constants
 from core.constants import AppNames
 from core.forms import ChoiceArrayField
-from core.models._ModelStubs import CodeStub
+from core.models._ModelStubs import CodeStub, EventBridgeStub
 from django.db import models
 
 
@@ -43,15 +45,22 @@ class AbstractSecurity(CodeStub):
 
 class AbstractSymbol(CodeStub):
 
+    search_index = models.CharField(max_length=64, unique=True)
+
     frontmonth = models.CharField(max_length=1, null=True, blank=True)
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.DATASET
         abstract = True
-        ordering = ['exchange__code', 'code']
+        ordering = ['search_index']
 
     def __str__(self):
-        return f'({self.exchange.code}):{self.code}'
+        return self.search_index
+
+    def save(self, *args, **kwargs):
+        text = f'({self.exchange.code}):{self.code} {self.description}'
+        self.search_index = text[64:]
+        super(AbstractSymbol, self).save(*args, **kwargs)
 
 
 class AbstractTempSymbol(models.Model):
@@ -81,7 +90,7 @@ class AbstractTempSymbol(models.Model):
         return f'({self.exchange.code}):{self.symbol.code}'
 
 
-class AbstractPortfolio(CodeStub):
+class AbstractPortfolio(CodeStub, EventBridgeStub):
 
     initial_capital = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -105,25 +114,97 @@ class AbstractPortfolio(CodeStub):
         )
     )
 
-    avg_profit = models.DecimalField(max_digits=9, decimal_places=2, null=True)
+    avg_profit_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
 
-    avg_duration = models.DurationField(null=True)
+    smallest_profit_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    largest_profit_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    avg_loss_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    smallest_loss_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    largest_loss_amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    avg_win_duration = models.DurationField(null=True, blank=True)
+
+    avg_loss_duration = models.DurationField(null=True, blank=True)
+
+    avg_wash_duration = models.DurationField(null=True, blank=True)
+
+    shortest_win_duration = models.DurationField(null=True, blank=True)
+
+    shortest_loss_duration = models.DurationField(null=True, blank=True)
+
+    shortest_wash_duration = models.DurationField(null=True, blank=True)
+
+    largest_win_duration = models.DurationField(null=True, blank=True)
+
+    largest_loss_duration = models.DurationField(null=True, blank=True)
+
+    largest_wash_duration = models.DurationField(null=True, blank=True)
 
     win_ratio = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
     total_cagr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+
+    total_wins = models.IntegerField(null=True, blank=True)
+
+    total_losses = models.IntegerField(null=True, blank=True)
+
+    total_washes = models.IntegerField(null=True, blank=True)
+
+    total_trades = models.IntegerField(null=True, blank=True)
+
+    open_trades = models.IntegerField(null=True, blank=True)
+
+    largest_wining_streak = models.IntegerField(null=True, blank=True)
+
+    largest_loosing_streak = models.IntegerField(null=True, blank=True)
+
+    largest_wash_streak = models.IntegerField(null=True, blank=True)
 
     class Meta(CodeStub.Meta):
         app_label = AppNames.TRACKRECORD
         abstract = True
 
 
-class AbstractPosition(models.Model):
+class AbstractPosition(models.Model, EventBridgeStub):
 
     trend_type = models.CharField(
-        max_length=5,
+        max_length=7,
         choices=constants.TrendType.choices,
-        default=constants.TrendType.LONG,
+        default=constants.TrendType.UNKNOWN,
     )
 
     position_status = models.CharField(
@@ -184,6 +265,31 @@ class AbstractPosition(models.Model):
 
     duration = models.DurationField(null=True, blank=True)
 
+    result_type = models.CharField(
+        max_length=7,
+        choices=constants.ResultType.choices,
+        null=True,
+        blank=True
+    )
+
+    streak_group = models.BigIntegerField(blank=True, null=True)
+
+    streak_index = models.PositiveIntegerField(blank=True, null=True)
+
+    @property
+    def price_difference(self) -> Decimal:
+        if self.exit_price and self.entry_price:
+            return self.exit_price - self.entry_price
+        return 0
+
+    @property
+    def amount_difference(self) -> int:
+        if self.entry_amount and self.exit_amount:
+            return self.entry_amount - self.exit_amount
+        elif self.entry_amount and self.exit_amount is None:
+            return self.entry_amount
+        return 0
+
     class Meta:
         app_label = AppNames.TRACKRECORD
         abstract = True
@@ -193,7 +299,7 @@ class AbstractPosition(models.Model):
         return self.portfolio.code
 
 
-class AbstractOrder(models.Model):
+class AbstractOrder(models.Model, EventBridgeStub):
 
     order_type = models.CharField(
         max_length=10,
@@ -264,7 +370,7 @@ class AbstractOrder(models.Model):
         ]
 
 
-class AbstractPermission(models.Model):
+class AbstractPermission(models.Model, EventBridgeStub):
 
     collection = models.CharField(
         max_length=15,
@@ -303,7 +409,7 @@ class AbstractPermission(models.Model):
         return "%s %s" % (self.role, self.collection)
 
 
-class AbstractSubscription(models.Model):
+class AbstractSubscription(models.Model, EventBridgeStub):
 
     role = models.CharField(
         max_length=10,

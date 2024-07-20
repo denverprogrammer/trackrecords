@@ -21,8 +21,16 @@ class OrderStatus(models.TextChoices):
 
 
 class TrendType(models.TextChoices):
+    UNKNOWN = 'unknown'
     LONG = 'long'
     SHORT = 'short'
+
+
+class ResultType(models.TextChoices):
+    UNKNOWN = 'unknown'
+    WIN = 'win'
+    LOSS = 'loss'
+    WASH = 'wash'
 
 
 class PositionStatus(models.TextChoices):

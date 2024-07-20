@@ -115,6 +115,8 @@ class OrderSubAdmin(AuthorizationMixin, SubAdmin):
 
     model = Order
 
+    raw_id_fields = ('symbol',)
+
     autocomplete_fields = ['symbol']
 
     collections = [
@@ -151,30 +153,21 @@ class OrderSubAdmin(AuthorizationMixin, SubAdmin):
     )
 
     def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        print('order module permissions ###########################')
-
         if not self.memStorage.portfolio:
             return False
 
         can_view = super(OrderSubAdmin, self).has_view_permission(request, obj)
         is_order = self.memStorage.portfolio.record_type == constants.RecordType.ORDER
 
-        print({
-            'can_view': can_view,
-            'is_order': is_order
-        })
-
         return is_order and can_view
 
     def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
         Order.objects.update_status(obj)
-
-        if obj.filled_amount and obj.filled_amount > 0 and obj.position is None:
-            Position.objects.set_position(obj)
-
+        Position.objects.set_position(obj)
         super(OrderSubAdmin, self).save_model(request, obj, form, change)
         Position.objects.update_status(obj.position)
-        obj.position.save()
+        obj.portfolio.positions.update_streaks()
+        Portfolio.objects.update_stats(obj.portfolio)
 
 
 class PositionSubAdmin(AuthorizationMixin, SubAdmin):
@@ -188,6 +181,8 @@ class PositionSubAdmin(AuthorizationMixin, SubAdmin):
         constants.CollectionName.OPEN_POSITION,
         constants.CollectionName.CLOSED_POSITION
     ]
+
+    readonly_fields = ['position_status']
 
     list_display = (
         'symbol',
@@ -236,10 +231,16 @@ class PortfolioAdmin(RootSubAdmin):
     search_fields = ['code', 'description']
 
     readonly_fields = [
-        'avg_profit',
-        'avg_duration',
+        'avg_profit_amount',
+        'avg_loss_amount',
+        'avg_win_duration',
+        'avg_loss_duration',
         'win_ratio',
-        'total_cagr'
+        'total_cagr',
+        'total_wins',
+        'total_losses',
+        'total_washes',
+        'total_trades'
     ]
 
     list_display = (
@@ -248,8 +249,6 @@ class PortfolioAdmin(RootSubAdmin):
         'initial_capital',
         'record_type',
         'entry_type',
-        'avg_profit',
-        'avg_duration',
         'win_ratio',
         'total_cagr'
     )
@@ -259,7 +258,18 @@ class PortfolioAdmin(RootSubAdmin):
             'fields': ('code', 'description', 'initial_capital', 'record_type', 'entry_type', 'allowed_roles')
         }),
         ('Calculations', {
-            'fields': ('avg_profit', 'avg_duration', 'win_ratio', 'total_cagr')
+            'fields': (
+                'avg_profit_amount',
+                'avg_loss_amount',
+                'avg_win_duration',
+                'avg_loss_duration',
+                'win_ratio',
+                'total_cagr',
+                'total_wins',
+                'total_losses',
+                'total_washes',
+                'total_trades'
+            )
         })
     )
 
@@ -290,3 +300,4 @@ class PortfolioAdmin(RootSubAdmin):
                 item.enabled = False
 
         manager.bulk_update(permissions, ['enabled'])
+        Portfolio.objects.update_stats(obj)

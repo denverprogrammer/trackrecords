@@ -33,3 +33,9 @@ nuke-it:
 # Removes unused docker resources
 clean-images:
 	docker rmi $(shell docker images --filter dangling=true --quiet)
+
+build:
+	sam build --use-container
+
+invokeOrderCreatedEvent:
+	sam local invoke OrderCreatedLambda

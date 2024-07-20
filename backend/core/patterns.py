@@ -1,14 +1,21 @@
 
+import datetime
+import json
 import threading
 import typing
+import uuid
 
+import boto3
 from core.constants import ActionType, CollectionName
 from core.models import Permission, Portfolio, Subscription
+from core.models._ModelStubs import EventBridgeStub
 
 
 class MemStorage:
     _instance = None
+
     _lock = threading.Lock()
+
     _values = {
         'portfolio': None,
         'subscription': None,
@@ -17,6 +24,7 @@ class MemStorage:
 
     def __new__(cls):
         if cls._instance is None:
+            print('Creating membership storage object')
             with cls._lock:
                 # Another thread could have created the instance
                 # before we acquired the lock. So check that the
@@ -62,3 +70,65 @@ class MemStorage:
                 return True
 
         return False
+
+
+class EventBridge(object):
+    _instance = None
+
+    _lock = threading.Lock()
+
+    _client = None
+
+    _events = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            print('Creating event bridge object')
+            cls._instance = super(EventBridge, cls).__new__(cls)
+            cls._client = boto3.client('events')
+            cls._events = []
+
+        return cls._instance
+    
+    @staticmethod
+    def build_event(source: str, detail_type: str, instance: EventBridgeStub) -> dict:
+        return {
+            'Time': datetime.datetime.now(),
+            'Source': source,
+            'Resources': [],
+            'DetailType': detail_type,
+            'Detail': {
+                'id': instance.getId()
+            },
+            'EventBusName': 'ambient',
+            'TraceHeader': uuid.uuid4()
+        }
+
+    @staticmethod
+    def created_event(source: str, detail_type: str, instance: EventBridgeStub) -> dict:
+        return EventBridge.build_event(source, detail_type, instance)
+        
+    @staticmethod
+    def updated_event(source: str, detail_type: str, instance: EventBridgeStub) -> dict:
+        return EventBridge.build_event(source, detail_type, instance)
+        
+    @staticmethod
+    def deleted_event(source: str, detail_type: str, instance: EventBridgeStub) -> dict:
+        return EventBridge.build_event(source, detail_type, instance)
+        
+    def save_event(self, event: dict) -> None:
+        self._events.append(event)
+    
+    def send_events(self) -> list:
+        items = []
+        responses = []
+
+        for event in self._events:
+            if not isinstance(event['Detail'], str):
+                event['Detail'] = json.dumps(event['Detail'])
+                items.append(event)
+
+        if items.length > 0:
+            responses.append(self._client.put_events(items))
+
+        return responses

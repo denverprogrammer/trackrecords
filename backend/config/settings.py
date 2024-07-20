@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'colorfield',
     'django_extensions',
     'subadmin',
+    'django_cte',
     'more_admin_filters',
     'django.contrib.admin',
     'django.contrib.auth',

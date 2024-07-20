@@ -33,6 +33,8 @@ from core.models.Abstractions import (
     AbstractTempSymbol,
 )
 from django.db import models
+from django.db.models import OuterRef, Subquery
+from django_cte import CTEManager, CTEQuerySet
 
 
 class PermissionManager(models.Manager[AbstractPermission]):
@@ -378,22 +380,37 @@ class PermissionManager(models.Manager[AbstractPermission]):
 class PortfolioManager(models.Manager[AbstractPortfolio]):
 
     def update_stats(self, portfolio: AbstractPortfolio) -> None:
-        positions: PositionQuerySet = getattr(portfolio, 'positions')
+        positions: PositionManager = getattr(portfolio, 'positions')
+        qs = positions.all().closed_positions()
+        profits = qs.calculate_profits()
+        losses = qs.calculate_losses()
+        washes = qs.calculate_washes()
 
-        first_order = None
+        portfolio.avg_profit_amount = profits.get(qs.AMOUNT_AVG, 0)
+        portfolio.smallest_profit_amount = profits.get(qs.AMOUNT_MIN, 0)
+        portfolio.largest_profit_amount = profits.get(qs.AMOUNT_MAX, 0)
 
-        entry_stamp = None
-        entry_amount = 0
-        entry_price = 0
-        entry_count = 0
+        portfolio.avg_loss_amount = losses.get(qs.AMOUNT_AVG, 0)
+        portfolio.smallest_loss_amount = losses.get(qs.AMOUNT_MIN, 0)
+        portfolio.largest_loss_amount = losses.get(qs.AMOUNT_MAX, 0)
 
-        exit_stamp = None
-        exit_amount = 0
-        exit_price = 0
-        exit_count = 0
+        portfolio.avg_win_duration = profits.get(qs.DURATION_AVG, 0)
+        portfolio.avg_loss_duration = losses.get(qs.DURATION_AVG, 0)
+        portfolio.avg_wash_duration = washes.get(qs.DURATION_AVG, 0)
 
-        for item in positions:
-            pass
+        portfolio.shortest_win_duration = profits.get(qs.DURATION_MIN, 0)
+        portfolio.shortest_loss_duration = losses.get(qs.DURATION_MIN, 0)
+        portfolio.shortest_wash_duration = washes.get(qs.DURATION_MIN, 0)
+
+        portfolio.largest_win_duration = profits.get(qs.DURATION_MAX, 0)
+        portfolio.largest_loss_duration = losses.get(qs.DURATION_MAX, 0)
+        portfolio.largest_wash_duration = washes.get(qs.DURATION_MAX, 0)
+
+        portfolio.total_wins = profits.get(qs.AMOUNT_CNT, 0)
+        portfolio.total_losses = losses.get(qs.AMOUNT_CNT, 0)
+        portfolio.total_washes = washes.get(qs.AMOUNT_CNT, 0)
+        portfolio.total_trades = portfolio.total_wins + \
+            portfolio.total_losses + portfolio.total_washes
 
     def get_queryset(self) -> PortfolioQuerySet:
         return PortfolioQuerySet(model=self.model, using=self._db, hints=self._hints)
@@ -427,7 +444,8 @@ class SymbolManager(models.Manager[AbstractSymbol], ImportExportStub):
         'security_id',
         'sic_id',
         'frontmonth',
-        'naics_id'
+        'naics_id',
+        'search_index'
     ]
 
     def get_queryset(self) -> SymbolQuerySet:
@@ -569,105 +587,103 @@ class OrderManager(models.Manager[AbstractOrder]):
             order.order_status = constants.OrderStatus.FILLED
 
 
-class PositionManager(models.Manager[AbstractPosition]):
+class PositionManager(CTEManager[AbstractPosition]):
+
+    def update_streaks(self) -> int:
+        qs = self.all().closed_positions()
+        index_subquery = qs.streak_index_query().filter(id=OuterRef('pk'))
+        lag_subquery = qs.streak_lag_query().filter(id=OuterRef('pk'))
+
+        update_response = qs.update(
+            streak_index=Subquery(index_subquery.values('group_index')[:1])
+        )
+
+        return qs.update(
+            streak_group=Subquery(lag_subquery.values('group_id')[:1])
+        )
 
     def update_status(self, position: AbstractPosition) -> None:
-        orders: OrderQuerySet = getattr(position, 'orders')
+        orders: OrderManager = getattr(position, 'orders')
+        rows = list(orders.all().order_stats())
+        entry_order = rows[0] if len(rows) > 0 else {}
+        exit_order = rows[1] if len(rows) > 1 else {}
+        position.trend_type = constants.TrendType.UNKNOWN
+        position.position_status = None
+        position.duration = None
+        position.real_pnl = None
+        position.unreal_pnl = None
 
-        first_order = None
-
-        entry_stamp = None
-        entry_amount = 0
-        entry_price = 0
-        entry_count = 0
-        entry_fees = 0
-
-        exit_stamp = None
-        exit_amount = 0
-        exit_price = 0
-        exit_count = 0
-        exit_fees = 0
-        price_difference = 0
-
-        for item in orders.all():
-            if item.hasAmount() == False:
-                continue
-            elif first_order is None:
-                first_order = item
-                entry_stamp = item.filled_stamp
-
-            if item.order_action == first_order.order_action:
-                entry_amount += item.filled_amount if item.filled_amount else 0
-                entry_price += item.filled_price if item.filled_price else 0
-                entry_fees += item.fees if item.fees else 0
-                entry_count += 1
-            else:
-                exit_stamp = item.filled_stamp
-                exit_amount += item.filled_amount if item.filled_amount else 0
-                exit_price += item.filled_price if item.filled_price else 0
-                exit_fees += item.fees if item.fees else 0
-                exit_count += 1
-
-        if entry_stamp:
-            position.entry_stamp = entry_stamp
-            position.entry_price = entry_price / entry_count
-            position.entry_amount = entry_amount
-            position.entry_fees = entry_fees
+        # define entry for position
+        if entry_order:
+            position.entry_stamp = entry_order.get('first_order', 0)
+            position.entry_price = entry_order.get('average_price', 0)
+            position.entry_amount = entry_order.get('total_amount', 0)
+            position.entry_fees = entry_order.get('total_fees', 0)
         else:
             position.entry_stamp = None
             position.entry_price = None
             position.entry_amount = None
             position.entry_fees = None
 
-        if exit_stamp:
-            position.exit_stamp = exit_stamp
-            position.exit_price = exit_price / exit_count
-            position.exit_amount = exit_amount
-            position.exit_fees = exit_fees
+        # define exit for position
+        if exit_order:
+            position.exit_stamp = exit_order.get('last_order', 0)
+            position.exit_price = exit_order.get('avg_price', 0)
+            position.exit_amount = exit_order.get('total_amount', 0)
+            position.exit_fees = exit_order.get('total_fees', 0)
         else:
             position.exit_stamp = None
             position.exit_price = None
             position.exit_amount = None
             position.exit_fees = None
 
-        if first_order.order_action == constants.OrderAction.BUY:
+        # define the trend (long/short) for this position
+        if entry_order.get('order_action', '') == constants.OrderAction.BUY:
             position.trend_type = constants.TrendType.LONG
-        elif first_order.order_action == constants.OrderAction.SELL:
+        elif entry_order.get('order_action', '') == constants.OrderAction.SELL:
             position.trend_type = constants.TrendType.SHORT
 
-        price_difference = abs(exit_price - entry_price)
-
-        if exit_amount > 0:
-            position.real_pnl = price_difference * exit_amount
-        else:
-            position.real_pnl = 0
-
-        if entry_amount == exit_amount and exit_amount > 0:
-            position.duration = exit_stamp - entry_stamp
-        elif entry_amount > 0 and exit_amount == 0:
-            tz_info = entry_stamp.tzinfo
-            position.duration = datetime.datetime.now(tz_info) - entry_stamp
-        else:
-            position.duration = None
-
-        if entry_amount > exit_amount and exit_amount > 0:
-            position.unreal_pnl = entry_price * (entry_amount - exit_amount)
-        elif entry_amount > exit_amount and exit_amount == 0:
-            position.unreal_pnl = entry_price * entry_amount
-        else:
-            position.unreal_pnl = 0
-
-        if entry_amount == exit_amount and exit_amount > 0:
+        # define the position status
+        if position.entry_amount == position.exit_amount and position.exit_amount is not None:
             position.position_status = constants.PositionStatus.CLOSED
         else:
             position.position_status = constants.PositionStatus.OPEN
 
+        # calculate the amount of time the position was open
+        if position.position_status == constants.PositionStatus.CLOSED:
+            position.duration = position.exit_stamp - position.entry_stamp
+        elif position.position_status == constants.PositionStatus.OPEN:
+            current = datetime.datetime.now(position.entry_stamp.tzinfo)
+            position.duration = current - position.entry_stamp
+
+        # calculate the amount of realized profit/loss for this position
+        if position.exit_amount:
+            position.real_pnl = position.price_difference * position.exit_amount
+        # calculate the amount of unrealized profit/loss for this position
+        if position.entry_price:
+            position.unreal_pnl = position.entry_price * position.amount_difference
+
+        # define the result type (win/loss/wash/none) for the position
+        if position.position_status != constants.PositionStatus.CLOSED:
+            position.result_type = constants.ResultType.UNKNOWN
+        elif position.real_pnl > 0:
+            position.result_type = constants.ResultType.WIN
+        elif position.real_pnl < 0:
+            position.result_type = constants.ResultType.LOSS
+        elif position.real_pnl == 0:
+            position.result_type = constants.ResultType.WASH
+
+        position.save()
+
     def set_position(self, oder: AbstractOrder) -> None:
+        # Find the first open position for this portfolio and symbol
         oder.position = self.all().open_position_by(
             oder.portfolio.id,
             oder.symbol.id
         )
 
+        # If a open position was not found then create a new one with the
+        # current order as the extry order
         if oder.position is None:
             oder.position = self.model()
             oder.position.portfolio = oder.portfolio

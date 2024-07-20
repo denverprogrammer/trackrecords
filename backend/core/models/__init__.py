@@ -36,25 +36,35 @@ from django.db import models
 
 class NaicsCode(AbstractNaicsCode):
 
+    symbols: models.Manager['Symbol']
+
     objects: NaicsManager = NaicsManager()
 
 
 class SicCode(AbstractSicCode):
+
+    symbols: models.Manager['Symbol']
 
     objects: SicManager = SicManager()
 
 
 class Exchange(AbstractExchange):
 
+    symbols: models.Manager['Symbol']
+
     objects: ExchangeManager = ExchangeManager()
 
 
 class Market(AbstractMarket):
 
+    symbols: models.Manager['Symbol']
+
     objects: MarketManager = MarketManager()
 
 
 class Security(AbstractSecurity):
+
+    symbols: models.Manager['Symbol']
 
     objects: SecurityManager = SecurityManager()
 
@@ -100,6 +110,10 @@ class Symbol(AbstractSymbol):
         related_query_name=constants.ModelClass.NAICS_CODE
     )
 
+    orders: models.Manager['Order']
+
+    positions: models.Manager['Position']
+
     objects: SymbolManager = SymbolManager()
 
 
@@ -109,6 +123,14 @@ class TempSymbol(AbstractTempSymbol):
 
 
 class Portfolio(AbstractPortfolio):
+
+    orders: models.Manager['Order']
+
+    positions: models.Manager['Position']
+
+    permissions: models.Manager['Permission']
+
+    subscriptions: models.Manager['Subscription']
 
     objects: PortfolioManager = PortfolioManager()
 
@@ -130,6 +152,8 @@ class Position(AbstractPosition):
         related_name=constants.CollectionGroup.POSITIONS,
         related_query_name=constants.ModelClass.SYMBOL
     )
+
+    orders: models.Manager['Order']
 
     objects: PositionManager = PositionManager()
 

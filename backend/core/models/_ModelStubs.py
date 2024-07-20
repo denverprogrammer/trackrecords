@@ -13,3 +13,8 @@ class CodeStub(models.Model):
 
     def __str__(self):
         return self.code
+
+class EventBridgeStub(object):
+    pass
+
+    # @abstractmethod
