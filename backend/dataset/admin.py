@@ -1,9 +1,9 @@
-from core.models import Exchange, Market, NaicsCode, Security, SicCode, Symbol
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import safestring
 from django.utils.html import format_html
 from more_admin_filters import RelatedDropdownFilter
+from vega.models import Exchange, Market, NaicsCode, Security, SicCode, Symbol
 
 
 class NamedAdmin(admin.ModelAdmin):

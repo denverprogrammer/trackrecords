@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from core.models import Order
+from vega.models import Order
 
 
 def created_event(event: dict, context: LambdaContext) -> dict:

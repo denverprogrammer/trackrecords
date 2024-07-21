@@ -1,7 +1,7 @@
-from core.models._ModelStubs import EventBridgeStub
 from django.db import models
 from django.db.models import signals
 from django.dispatch import receiver
+from vega.models._ModelStubs import EventBridgeStub
 
 
 @receiver(signals.post_save, sender=models.Model)

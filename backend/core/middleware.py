@@ -2,13 +2,13 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
-from core import constants
-from core.models import Portfolio
 from core.patterns import MemStorage
 from django.contrib.admin.utils import unquote
 from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.urls import resolve
+from vega import constants
+from vega.models import Portfolio
 
 
 class PermissionMiddleware:

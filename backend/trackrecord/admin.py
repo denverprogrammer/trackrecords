@@ -2,15 +2,6 @@ import typing
 from functools import wraps
 from typing import Optional
 
-from core import constants
-from core.models import (
-    Order,
-    Permission,
-    PermissionManager,
-    Portfolio,
-    Position,
-    Subscription,
-)
 from core.patterns import MemStorage
 from django import forms
 from django.contrib import admin
@@ -20,6 +11,15 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
+from vega import constants
+from vega.models import (
+    Order,
+    Permission,
+    PermissionManager,
+    Portfolio,
+    Position,
+    Subscription,
+)
 
 
 class AuthorizationMixin:

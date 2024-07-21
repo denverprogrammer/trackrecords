@@ -5,7 +5,10 @@ Django command to wait for the database to be available.
 import os
 import typing
 
-from core.models import (
+from django.core.management.base import BaseCommand
+from django.db import connection, transaction
+from django.db.backends.utils import CursorWrapper
+from vega.models import (
     Exchange,
     Market,
     NaicsCode,
@@ -14,9 +17,6 @@ from core.models import (
     Symbol,
     TempSymbol,
 )
-from django.core.management.base import BaseCommand
-from django.db import connection, transaction
-from django.db.backends.utils import CursorWrapper
 
 
 class Command(BaseCommand):

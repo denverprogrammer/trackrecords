@@ -32,7 +32,8 @@ nuke-it:
 
 # Removes unused docker resources
 clean-images:
-	docker rmi $(shell docker images --filter dangling=true --quiet)
+	# docker rmi $(shell docker images --filter dangling=true --quiet)
+	docker system prune -f --volumes
 
 build:
 	sam build --use-container

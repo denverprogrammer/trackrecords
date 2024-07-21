@@ -6,9 +6,9 @@ import typing
 import uuid
 
 import boto3
-from core.constants import ActionType, CollectionName
-from core.models import Permission, Portfolio, Subscription
-from core.models._ModelStubs import EventBridgeStub
+from vega.constants import ActionType, CollectionName
+from vega.models import Permission, Portfolio, Subscription
+from vega.models._ModelStubs import EventBridgeStub
 
 
 class MemStorage:
