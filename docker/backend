@@ -42,6 +42,8 @@ RUN apk update \
     && pipenv install -e ../lib/vega --skip-lock \
     && pipenv install --system --deploy --ignore-pipfile
 
+
+
 FROM base as compiled
 
 LABEL maintainer="denverprogrammer@gmail.com"
