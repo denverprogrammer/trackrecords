@@ -28,7 +28,7 @@ services:
             - static_volume:/home/static
             - media_volume:/home/media
             - import_volume:/home/data
-            - ./lib/vega:/home/lib/vega
+            - ./libs/vega:/home/libs/vega
         depends_on:
             - database
         networks:

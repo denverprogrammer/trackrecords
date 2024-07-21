@@ -28,10 +28,10 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 
 RUN  mkdir -p /home/backend \
-    && mkdir -p /home/lib/vega
+    && mkdir -p /home/libs/vega
 
 COPY ./backend/Pipfile /home/backend
-COPY ./lib/vega /home/lib/vega
+COPY ./libs/vega /home/libs/vega
 WORKDIR /home/backend
 
 RUN apk update \
@@ -39,7 +39,7 @@ RUN apk update \
     && apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-dev libjpeg-turbo-dev \
     && pip install --upgrade pip --root-user-action=ignore \
     && pip install pipenv --root-user-action=ignore \
-    && pipenv install -e ../lib/vega --skip-lock \
+    && pipenv install -e ../libs/vega --skip-lock \
     && pipenv install --system --deploy --ignore-pipfile
 
 
@@ -55,11 +55,11 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 RUN apk update \
     && apk add libpq libjpeg-turbo-dev \
-    && mkdir -p /home/lib/vega \
+    && mkdir -p /home/libs/vega \
     && mkdir -p /home/backend
 
 COPY --from=dependencies /usr/local /usr/local
-COPY --from=dependencies /home/lib/vega /home/lib/vega
+COPY --from=dependencies /home/libs/vega /home/libs/vega
 
 ADD ./backend/scripts/entrypoint.sh /home/scripts/entrypoint.sh
 RUN chmod 755 /home/scripts/entrypoint.sh
