@@ -11,7 +11,7 @@ from vega.models import Permission, Portfolio, Subscription
 from vega.models._ModelStubs import EventBridgeStub
 
 
-class MemStorage:
+class MembershipManagement:
     _instance = None
 
     _lock = threading.Lock()

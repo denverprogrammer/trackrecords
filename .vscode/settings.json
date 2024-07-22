@@ -68,5 +68,6 @@
     "typescript.preferences.importModuleSpecifier": "relative",
     "debug.javascript.usePreview": false,
     "python.analysis.extraPaths": [
+        "./libs/vega"
     ]
 }

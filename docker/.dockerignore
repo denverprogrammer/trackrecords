@@ -1,0 +1,61 @@
+# Ignore Python cache files
+__pycache__
+*.pyc
+*.pyo
+
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore Docker files
+.dockerignore
+Dockerfile
+
+# Ignore node_modules (if using Node.js)
+node_modules/
+
+# Ignore environment variable files
+.env
+
+# Ignore log files and databases
+*.log
+*.sql
+*.sqlite
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore compiled code and static files
+build/
+dist/
+*.egg-info/
+
+# Ignore test coverage results
+.coverage
+htmlcov/
+.coverage.*
+
+# Ignore documentation
+docs/
+
+# Ignore data files
+data/
+*.csv
+*.json
+
+# Ignore other unnecessary files and directories
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo

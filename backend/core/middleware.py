@@ -2,7 +2,7 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
-from core.patterns import MemStorage
+from core.patterns import MembershipManagement
 from django.contrib.admin.utils import unquote
 from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
@@ -12,12 +12,12 @@ from vega.models import Portfolio
 
 
 class PermissionMiddleware:
-    memStorage = None
+    mgmt = None
 
     def __init__(self, get_response):
         self.get_response = get_response
         # One-time configuration and initialization.
-        self.memStorage = MemStorage()
+        self.mgmt = MembershipManagement()
 
     def setStorage(self, id: str | None, request: HttpRequest) -> None:
         id = int(unquote(id))
@@ -38,9 +38,9 @@ class PermissionMiddleware:
             role_query = Q(role=role_type)
             permissions = list(portfolio.permissions.filter(role_query))
 
-        self.memStorage.portfolio = portfolio
-        self.memStorage.subscription = subscription
-        self.memStorage.permissions = permissions
+        self.mgmt.portfolio = portfolio
+        self.mgmt.subscription = subscription
+        self.mgmt.permissions = permissions
         print('storage set $$$$$$$$$$$$$$$$$$$$$$$$$$')
 
     def __call__(self, request: HttpRequest) -> HttpResponse:

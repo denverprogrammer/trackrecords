@@ -2,7 +2,7 @@ import typing
 from functools import wraps
 from typing import Optional
 
-from core.patterns import MemStorage
+from core.patterns import MembershipManagement
 from django import forms
 from django.contrib import admin
 from django.http import HttpRequest
@@ -12,6 +12,7 @@ from django.urls import reverse
 from more_admin_filters import DropdownFilter
 from subadmin import RootSubAdmin, SubAdmin
 from vega import constants
+from vega.documentation import inherit_docstring_from
 from vega.models import (
     Order,
     Permission,
@@ -23,59 +24,112 @@ from vega.models import (
 
 
 class AuthorizationMixin:
+    """
+    Mixin class to handle authorization logic for membership-related objects by collections.
 
-    memStorage = MemStorage()
+    Attributes:
+        mgmt (MembershipManagement): Management of membership-related permissions.z
+        collections (list): A list of collections related to the permissions being checked.
+    """
+
+    mgmt = MembershipManagement()
+
     collections = []
 
     def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
+        """
+        Determines whether the user has view permission for a given object.
+        
+        If no specific object is provided, it checks the user's module-level permissions.
+
+        Args:
+            request (HttpRequest): The HTTP request object containing metadata about the request.
+            obj (typing.Any | None): This object is never used here but must be passed.
+
+        Returns:
+            bool: True if the user has view permission, False otherwise.
+        """
+
         if obj is None:
             return self.has_module_permission(request)
 
-        print(f'check if user can view {self.collections}')
-
-        test = self.memStorage.has_permissions(
+        test = self.mgmt.has_permissions(
             self.collections,
             constants.ActionType.VIEW
         )
-        print(test)
+        
+        print(f'User can view {self.collections} is {test}')
 
         return test
 
     def has_add_permission(self, request: HttpRequest) -> bool:
-        print(f'check if user can add {self.collections}')
+        """
+        Determines whether the user has permission to add a new object.
 
-        test = self.memStorage.has_permissions(
+        This method checks if the user has the required permissions to add a new object in the system.
+
+        Args:
+            request (HttpRequest): The HTTP request object that contains metadata about the request.
+
+        Returns:
+            bool: True if the user has permission to add a new object, False otherwise.
+        """
+        test = self.mgmt.has_permissions(
             self.collections,
             constants.ActionType.CREATE
         )
-        print(test)
+        print(f'User can add {self.collections} is {test}')
 
         return test
 
     def has_change_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        print(f'check if user can update {self.collections}')
+        """
+        Determines whether the user has permission to update the specified object.
 
-        test = self.memStorage.has_permissions(
+        This method checks if the user has the required permissions to update a collection.
+
+        Args:
+            request (HttpRequest): The HTTP request object that contains metadata about the request.
+            obj (typing.Any | None): This object is never used here but must be passed.
+
+        Returns:
+            bool: True if the user has change permission for the object or module, False otherwise.
+        """
+        test = self.mgmt.has_permissions(
             self.collections,
             constants.ActionType.UPDATE
         )
-        print(test)
+        print(f'User can update {self.collections} is {test}')
 
         return test
 
     def has_delete_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        print(f'check if user can delete {self.collections}')
+        """
+        Determines whether the user has permission to delete the specified object.
 
-        test = self.memStorage.has_permissions(
+        This method checks if the user has the required permissions to delete an object.
+
+        Args:
+            request (HttpRequest): The HTTP request object that contains metadata about the request.
+            obj (typing.Any | None): This object is never used here but must be passed.
+
+        Returns:
+            bool: True if the user has delete permission for the object or module, False otherwise.
+        """
+        test = self.mgmt.has_permissions(
             self.collections,
             constants.ActionType.DELETE
         )
-        print(test)
+        print(f'User can delete {self.collections} is {test}')
 
         return test
 
 
 class SubscriptionSubAdmin(AuthorizationMixin, SubAdmin):
+    """
+    Admin interface for managing Subscription instances.
+    """
+    
     model = Subscription
 
     collections = [
@@ -88,6 +142,10 @@ class SubscriptionSubAdmin(AuthorizationMixin, SubAdmin):
 
 
 class PermissionSubAdmin(AuthorizationMixin, SubAdmin):
+    """
+    Admin interface for managing Permission instances.
+    """
+
     model = Permission
 
     collections = [
@@ -112,6 +170,9 @@ class PermissionSubAdmin(AuthorizationMixin, SubAdmin):
 
 
 class OrderSubAdmin(AuthorizationMixin, SubAdmin):
+    """
+    Admin interface for managing Order instances.
+    """
 
     model = Order
 
@@ -152,15 +213,17 @@ class OrderSubAdmin(AuthorizationMixin, SubAdmin):
         })
     )
 
+    @inherit_docstring_from(AuthorizationMixin)
     def has_view_permission(self, request: HttpRequest, obj: typing.Any | None = ...) -> bool:
-        if not self.memStorage.portfolio:
+        if not self.mgmt.portfolio:
             return False
 
         can_view = super(OrderSubAdmin, self).has_view_permission(request, obj)
-        is_order = self.memStorage.portfolio.record_type == constants.RecordType.ORDER
+        is_order = self.mgmt.portfolio.record_type == constants.RecordType.ORDER
 
         return is_order and can_view
 
+    @inherit_docstring_from(SubAdmin)
     def save_model(self, request: HttpRequest, obj: Order, form: forms.ModelForm, change: bool):
         Order.objects.update_status(obj)
         Position.objects.set_position(obj)
@@ -171,6 +234,10 @@ class OrderSubAdmin(AuthorizationMixin, SubAdmin):
 
 
 class PositionSubAdmin(AuthorizationMixin, SubAdmin):
+    """
+    Admin interface for managing Position instances.
+    """
+
     subadmins = [OrderSubAdmin]
 
     model = Position
@@ -210,12 +277,16 @@ class PositionSubAdmin(AuthorizationMixin, SubAdmin):
         })
     )
 
+    @inherit_docstring_from(SubAdmin)
     def save_model(self, request: HttpRequest, obj: Position, form: forms.ModelForm, change: bool):
         super(PositionSubAdmin, self).save_model(request, obj, form, change)
 
 
 @admin.register(Portfolio)
 class PortfolioAdmin(RootSubAdmin):
+    """
+    Admin interface for managing Portfolio instances.
+    """
 
     subadmins = [
         PermissionSubAdmin,
@@ -273,6 +344,7 @@ class PortfolioAdmin(RootSubAdmin):
         })
     )
 
+    @inherit_docstring_from(SubAdmin)
     def save_model(self, request: HttpRequest, obj: Portfolio, form: forms.ModelForm, change: bool):
         super(PortfolioAdmin, self).save_model(request, obj, form, change)
         manager: PermissionManager = Permission.objects
