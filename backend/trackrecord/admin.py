@@ -2,7 +2,7 @@ import typing
 from functools import wraps
 from typing import Optional
 
-from core.patterns import MembershipManagement
+from core.patterns.management import MembershipManagement
 from django import forms
 from django.contrib import admin
 from django.http import HttpRequest

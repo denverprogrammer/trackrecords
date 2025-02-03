@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         cursor: CursorWrapper = connection.cursor()
 
-        self.stdout.write('Clearning temp table...')
+        self.stdout.write('Clear original tables...')
         NaicsCode.objects.clear_table(cursor)
         NaicsCode.objects.import_from_file(cursor)
         self.stdout.write('Imported NAICS codes...')
@@ -41,7 +41,7 @@ class Command(BaseCommand):
         Security.objects.clear_table(cursor)
         Security.objects.import_from_file(cursor)
         self.stdout.write('Imported Securities...')
-        self.stdout.write('Initial import of related data complete...')
+        self.stdout.write('Import of related entities complete...')
 
         TempSymbol.objects.download_data_file()
         self.stdout.write('Download complete...')

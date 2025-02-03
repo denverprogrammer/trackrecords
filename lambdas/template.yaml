@@ -18,7 +18,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Handler: orders.created_event
-            CodeUri: ./lambdas
+            CodeUri: ./lambdas/src
             Layers:
                 - !Ref ConfigLayer
                 - !Ref CoreLayer

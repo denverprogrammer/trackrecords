@@ -1,20 +1,20 @@
+import json
 import logging
 import os
 from pprint import pprint
 
-import django
 from awslambdaric.lambda_context import LambdaContext
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django.setup()
-
 from vega.models import Order
+
+from lambdas import setup_django
 
 
 def created_event(event: dict, context: LambdaContext) -> dict:
+    setup_django()
     items = Order.objects.all()
     pprint(event)
     pprint(context)

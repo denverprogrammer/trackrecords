@@ -2,7 +2,7 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
-from core.patterns import MembershipManagement
+from core.patterns.management import MembershipManagement
 from django.contrib.admin.utils import unquote
 from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
