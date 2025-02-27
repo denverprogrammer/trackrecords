@@ -3,7 +3,7 @@ name = "config"
 version = "0.0.1"
 description = "Common config across project"
 authors = ["Josh Martin <denverprogrammer@gmail.com>"]
-package-mode = false
+packages = [{include = "config"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12"
@@ -12,3 +12,7 @@ python = ">=3.12"
 enabled = true
 monorepo-root = "../../"
 version-pinning-rule = '=='
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

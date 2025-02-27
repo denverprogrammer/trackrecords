@@ -203,7 +203,7 @@ class AbstractPosition(models.Model, EventBridgeStub):
     )
 
     position_status = models.CharField(
-        max_length=6,
+        max_length=7,
         choices=constants.PositionStatus.choices,
         default=constants.PositionStatus.OPEN,
     )

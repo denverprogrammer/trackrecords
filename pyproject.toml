@@ -4,7 +4,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py312"]
 
 [tool.isort]
 known_first_party = ["velorem"]
@@ -19,8 +19,9 @@ name = "valorem"
 python = ">=3.12,<4.0"
 config = { path = "libs/config", develop = true }
 sam-applications = { path = "services/applications", develop = true }
-setuptools = "^75.8.0"
 vega = { path = "libs/vega", develop = true }
+backend = { path = "projects/backend", develop = true }
+setuptools = "^75.8.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.1.0"
@@ -34,7 +35,9 @@ toml-sort = ">=0.24.2"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-shell = ">=1.0.1"
-poetry-plugin-sort = "*"
+poetry-plugin-sort = ">=0.3.0"
+poetry-monoranger-plugin = ">=0.4.0"
+poetry-plugin-export = ">=1.9.0"
 
 [tool.poetry.scripts]
 toml-sort = 'toml_sort.cli:cli'
@@ -48,12 +51,12 @@ enable = [
     "missing-module-docstring",
 ]
 ignore = ["__init__.py", "setup.py"]
-ignore-paths = ['.*/tests']
+ignore-paths = ['.*/tests', '.poetry']
 
 [tool.pyright]
 reportMissingTypeArgument = true  # Report generic classes used without type arguments
 strictListInference = true  # Use union types when inferring types of lists elements, instead of Any
-include = ["libs/vega", "services/backend"]
+include = ["libs/vega", "services/backend", "projects/backend"]
 extraPaths = ["libs/config"]
 
 [tool.tomlsort]

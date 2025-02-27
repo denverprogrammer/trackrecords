@@ -130,3 +130,5 @@ dmypy.json
 
 .aws-sam
 .aws-sam/
+
+**/static/

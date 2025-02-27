@@ -3,6 +3,7 @@ name = "vega"
 version = "0.0.1"
 description = "Common python libraries across project"
 authors = ["Josh Martin <denverprogrammer@gmail.com>"]
+packages = [{include = "vega"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12"
@@ -14,3 +15,7 @@ psycopg2-binary = ">=2.9"
 enabled = true
 monorepo-root = "../../"
 version-pinning-rule = '=='
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

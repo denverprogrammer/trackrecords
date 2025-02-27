@@ -1,4 +1,4 @@
-FROM python:3.11-rc-alpine3.16 as base
+FROM python:3.12-alpine3.21 as base
 
 # Add labels
 LABEL maintainer="denverprogrammer@gmail.com"
@@ -14,6 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 # enable Python tracebacks on segfaults
 ENV PYTHONFAULTHANDLER 1
+# Disable Poetry virtual environments
+ENV POETRY_VIRTUALENVS_CREATE=false
 # set locale
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -30,19 +32,17 @@ LABEL org.opencontainers.image.licenses="MIT"
 RUN  mkdir -p /home/backend \
     && mkdir -p /home/libs/vega
 
-COPY ./backend/Pipfile /home/backend
-COPY ./backend/Pipfile.lock /home/backend
-COPY ./libs/vega /home/libs/vega
+COPY ./projects/backend/pyproject.toml ./projects/backend/poetry.lock /home/backend/
+COPY ./libs/config /libs/config
+COPY ./libs/vega /libs/vega
 WORKDIR /home/backend
 
 RUN apk update \
     && apk add --no-cache postgresql-libs \
     && apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-dev libjpeg-turbo-dev \
     && pip install --upgrade pip --root-user-action=ignore \
-    && pip install pipenv --root-user-action=ignore \
-    && pipenv install -e ../libs/vega --skip-lock \
-    && pipenv install --system --deploy --ignore-pipfile
-
+    && pip install poetry \
+    && poetry install --no-root --no-interaction
 
 
 FROM base as compiled
@@ -60,12 +60,13 @@ RUN apk update \
     && mkdir -p /home/backend
 
 COPY --from=dependencies /usr/local /usr/local
-COPY --from=dependencies /home/libs/vega /home/libs/vega
+COPY --from=dependencies /libs/config /libs/config
+COPY --from=dependencies /libs/vega /libs/vega
 
-ADD ./backend/scripts/entrypoint.sh /home/scripts/entrypoint.sh
+ADD ./projects/backend/scripts/entrypoint.sh /home/scripts/entrypoint.sh
 RUN chmod 755 /home/scripts/entrypoint.sh
 
-COPY ./backend /home/backend
+COPY ./projects/backend /home/backend
 WORKDIR /home/backend
 
 ENTRYPOINT ["/bin/sh", "/home/scripts/entrypoint.sh"]

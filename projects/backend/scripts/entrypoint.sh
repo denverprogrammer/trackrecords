@@ -22,7 +22,7 @@ fi
 
 python manage.py collectstatic --no-input --clear
 
-gunicorn config.asgi:application \
+gunicorn configuration.asgi:application \
     -w 2 \
     -k uvicorn.workers.UvicornWorker \
     --name gunicorn_worker \

@@ -3,6 +3,7 @@ name = "sam-applications"
 version = "0.0.1"
 description = "Common python applications directory for valorem"
 authors = ["Josh Martin <denverprogrammer@gmail.com>"]
+packages = [{include = "lambdas"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12"
