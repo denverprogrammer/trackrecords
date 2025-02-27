@@ -8,13 +8,12 @@ class CodeStub(models.Model):
     description = models.CharField(max_length=150, null=True, blank=True)
 
     class Meta:
-        ordering = ['code']
+        ordering = ["code"]
         abstract = True
 
     def __str__(self):
         return self.code
 
+
 class EventBridgeStub(object):
     pass
-
-    # @abstractmethod

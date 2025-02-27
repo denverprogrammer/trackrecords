@@ -1,4 +1,4 @@
-import functools
+# import functools
 
 
 def inherit_docstring_from(parent_class):
@@ -32,9 +32,12 @@ def inherit_docstring_from(parent_class):
         # You can check the docstring to see if it was inherited
         print(DerivedClass.some_method.__doc__)
     """
+
     def decorator(func):
         parent_method = getattr(parent_class, func.__name__, None)
         if parent_method and parent_method.__doc__:
             func.__doc__ = parent_method.__doc__
+
         return func
+
     return decorator

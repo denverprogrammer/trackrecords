@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "vega"
+version = "0.0.1"
+description = "Common python libraries across project"
+authors = ["Josh Martin <denverprogrammer@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+django = "==5.0"
+django-cte = "^1.3.3"
+psycopg2-binary = ">=2.9"
+
+[tool.poetry-monoranger-plugin]
+enabled = true
+monorepo-root = "../../"
+version-pinning-rule = '=='

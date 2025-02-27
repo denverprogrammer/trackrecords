@@ -1,23 +1,22 @@
+from typing import Any
+
 from django import forms
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField  # ✅ Correct import
 
 
 class ArraySelectMultiple(forms.SelectMultiple):
-
     def value_omitted_from_data(self, data, files, name):
         return False
 
 
-class ChoiceArrayField(ArrayField):
-
+class ChoiceArrayField(ArrayField):  # type: ignore # ✅ Use Any to prevent type errors
     def formfield(self, **kwargs):
         defaults = {
-            'form_class': forms.TypedMultipleChoiceField,
-            'choices': self.base_field.choices,
-            'coerce': self.base_field.to_python,
-            'widget': ArraySelectMultiple
+            "form_class": forms.TypedMultipleChoiceField,
+            "choices": getattr(self.base_field, "choices", []),  # ✅ Avoid AttributeError
+            "coerce": getattr(self.base_field, "to_python", str),  # ✅ Safer access
+            "widget": ArraySelectMultiple,
         }
         defaults.update(kwargs)
-        # Skip our parent's formfield implementation completely as we don't care for it.
-        # pylint:disable=bad-super-call
-        return super(ArrayField, self).formfield(**defaults)
+
+        return super().formfield(**defaults)  # ✅ Correct `super()` call

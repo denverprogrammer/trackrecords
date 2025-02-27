@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "backend"
+version = "0.0.1"
+description = "webserver backend"
+authors = ["Josh Martin <denverprogrammer@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+config = { path = "../libs/config", develop = true }
+django = "==5.0"
+psycopg2-binary = ">=2.9"
+vega = { path = "../libs/vega", develop = true }
+
+[tool.poetry-monoranger-plugin]
+enabled = true
+monorepo-root = "../"
+version-pinning-rule = '=='
